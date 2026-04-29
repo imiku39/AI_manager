@@ -43,6 +43,10 @@
           <span class="material-symbols-outlined">calendar_today</span>
           截止日期
         </button>
+        <button class="btn-chip" :class="{ active: sortMode === 'health' }" type="button" @click="toggleHealthSort">
+          <span class="material-symbols-outlined">monitor_heart</span>
+          健康度排序
+        </button>
         <button class="btn-chip" :class="{ active: sortMode === 'priority' }" type="button" @click="togglePrioritySort">
           <span class="material-symbols-outlined">sort</span>
           权重排序
@@ -192,6 +196,10 @@ const togglePrioritySort = () => {
   sortMode.value = sortMode.value === 'priority' ? 'default' : 'priority'
 }
 
+const toggleHealthSort = () => {
+  sortMode.value = sortMode.value === 'health' ? 'default' : 'health'
+}
+
 const filteredProjects = computed(() => {
   const keyword = searchQuery.value.trim().toLowerCase()
   return projects.value.filter((item) => {
@@ -212,6 +220,10 @@ const sortedProjects = computed(() => {
   }))
 
   if (sortMode.value === 'deadline') return list.sort((a, b) => a.deadlineAt - b.deadlineAt)
+  if (sortMode.value === 'health') {
+    const healthScoreMap = { 严重: 4, 风险: 3, 良好: 2, 完成: 1 }
+    return list.sort((a, b) => (healthScoreMap[b.healthLabel] || 0) - (healthScoreMap[a.healthLabel] || 0))
+  }
   if (sortMode.value === 'priority') return list.sort((a, b) => b.priority - a.priority)
   return list
 })
