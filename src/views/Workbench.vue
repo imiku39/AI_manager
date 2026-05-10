@@ -1,878 +1,1037 @@
 <template>
-  <div class="workbench">
-    <div class="workbench-header">
-      <h1>个人工作台</h1>
-    </div>
-    <div class="workbench-tabs">
-      <button class="tab-btn" :class="{ active: activeTab === 'logs' }" @click="activeTab = 'logs'">日志</button>
-      <button class="tab-btn" :class="{ active: activeTab === 'kanban' }" @click="activeTab = 'kanban'">看板</button>
-      <button class="tab-btn" :class="{ active: activeTab === 'pbc' }" @click="activeTab = 'pbc'">PBC</button>
-    </div>
-    <div class="workbench-content">
-      <!-- 日志 Tab -->
-      <div v-if="activeTab === 'logs'" class="logs-tab">
-        <div class="logs-header">
-          <button class="write-log-btn">写日志</button>
-          <div class="log-filter">
-            <select v-model="logFilter">
-              <option value="all">全部日志</option>
-              <option value="mine">我的日志</option>
-              <option value="team">团队日志</option>
-            </select>
-          </div>
+  <div class="app-shell">
+    <aside class="app-sidebar">
+      <div class="brand-box">
+        <div class="brand-icon"><span class="material-symbols-outlined">science</span></div>
+        <div>
+          <h1 class="brand-title">R&D 系统</h1>
+          <p class="brand-subtitle">AI 驱动型协作平台</p>
         </div>
-        <div class="log-list">
-          <div class="log-item" v-for="log in filteredLogs" :key="log.id">
-            <div class="log-header">
-              <div class="log-date-author">
-                <h3>{{ log.date }}</h3>
-                <span class="log-author">{{ log.author }}</span>
-              </div>
-              <div class="log-actions">
-                <button class="like-btn" :class="{ liked: log.liked }" @click="toggleLike(log.id)">
-                  👍 {{ log.likes }}
-                </button>
-                <button class="comment-btn" @click="toggleComments(log.id)">
-                  💬 {{ log.comments.length }}
-                </button>
-              </div>
-            </div>
-            <div class="log-content">
-              <div class="log-section">
-                <h4>今日完成</h4>
-                <p>{{ log.today }}</p>
-              </div>
-              <div class="log-section">
-                <h4>明日计划</h4>
-                <p>{{ log.tomorrow }}</p>
-              </div>
-              <div class="log-section">
-                <h4>阻塞问题</h4>
-                <p>{{ log.blockers }}</p>
-              </div>
-            </div>
-            <div class="log-comments" v-if="expandedComments.includes(log.id)">
-              <div class="comment-item" v-for="comment in log.comments" :key="comment.id">
-                <div class="comment-header">
-                  <span class="comment-author">{{ comment.author }}</span>
-                  <span class="comment-time">{{ comment.time }}</span>
-                </div>
-                <div class="comment-content">{{ comment.content }}</div>
-              </div>
-              <div class="add-comment">
-                <input type="text" placeholder="添加评论..." v-model="newComment" @keyup.enter="addComment(log.id)">
-                <button class="comment-submit-btn">发送</button>
-              </div>
-            </div>
-            <div class="log-footer">
-              <button class="ai-generate-btn" @click="generateLogWithAI">AI 一键生成</button>
-            </div>
+      </div>
+      <button class="sidebar-primary-cta" @click="openModal">
+        <span class="material-symbols-outlined">add_task</span>
+        新建任务
+      </button>
+      <nav class="sidebar-nav">
+        <a class="nav-item" href="#" @click.prevent="handleNavigate('/dashboard')"><span class="material-symbols-outlined">dashboard</span><span>全局工作台</span></a>
+        <a class="nav-item" href="#" @click.prevent="handleNavigate('/projects')"><span class="material-symbols-outlined">account_tree</span><span>项目列表</span></a>
+        <a class="nav-item active" href="#" @click.prevent="handleNavigate('/workbench')"><span class="material-symbols-outlined">space_dashboard</span><span>个人工作台</span></a>
+        <a class="nav-item" href="#" @click.prevent="handleNavigate('/reports')"><span class="material-symbols-outlined">query_stats</span><span>全局报表</span></a>
+        <a class="nav-item" href="#" @click.prevent="handleNavigate('/settings')"><span class="material-symbols-outlined">settings</span><span>系统设置</span></a>
+        <a class="nav-item" href="#" @click.prevent="handleNavigate('/admin')"><span class="material-symbols-outlined">admin_panel_settings</span><span>后台管理</span></a>
+      </nav>
+    </aside>
+
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <div>
+          <h2 class="topbar-title">个人工作台</h2>
+          <div class="topbar-breadcrumb">
+            <span>个人</span>
+            <span>/</span>
+            <span>日志 · 看板 · PBC</span>
           </div>
         </div>
       </div>
-      <!-- 看板 Tab -->
-      <div v-if="activeTab === 'kanban'" class="kanban-tab">
-        <div class="kanban-header">
-          <h2>个人任务看板</h2>
-          <div class="kanban-actions">
-            <button class="add-task-btn">+ 新建任务</button>
-            <select v-model="kanbanFilter">
-              <option value="all">所有项目</option>
-              <option value="AI项目管理系统">AI项目管理系统</option>
-              <option value="智能客服系统">智能客服系统</option>
-            </select>
+      <div class="topbar-right">
+        <label class="search-shell">
+          <span class="material-symbols-outlined">search</span>
+          <input type="text" placeholder="搜索个人任务或日志..." />
+        </label>
+        <a class="icon-btn notification-link" href="#" @click.prevent="handleNavigate('/notifications')" aria-label="打开通知中心"><span class="material-symbols-outlined">notifications</span><span class="notification-badge">5</span></a>
+        <button class="icon-btn"><span class="material-symbols-outlined">apps</span></button>
+        <button class="icon-btn" @click="toggleAiDrawer"><span class="material-symbols-outlined">auto_awesome</span></button>
+        <UserProfileHoverCard :user="currentUser" />
+      </div>
+    </header>
+
+    <main class="app-content">
+      <div class="page-stack workbench-page-stack">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">个人工作台</h1>
+            <p class="page-subtitle">结构化日志、个人看板与 PBC 目标集中在同一工作台中，减少切换成本。</p>
+          </div>
+          <div class="page-actions">
+            <div class="tab-switcher">
+              <button class="tab-btn" :class="{ active: activeTab === 'logs' }" @click="activeTab = 'logs'">日志</button>
+              <button class="tab-btn" :class="{ active: activeTab === 'kanban' }" @click="activeTab = 'kanban'">看板</button>
+              <button class="tab-btn" :class="{ active: activeTab === 'pbc' }" @click="activeTab = 'pbc'">PBC</button>
+            </div>
           </div>
         </div>
-        <div class="kanban-columns">
-          <div class="kanban-column" v-for="column in kanbanColumns" :key="column.id">
-            <div class="column-header">
-              <h3>{{ column.name }}</h3>
-              <span class="task-count">{{ getTasksByStatus(column.id).length }}</span>
-            </div>
-            <div class="task-list">
-              <div class="task-card" v-for="task in getTasksByStatus(column.id)" :key="task.id">
-                <div class="task-priority" :class="task.priority">{{ task.priority }}</div>
-                <h4 class="task-title">{{ task.title }}</h4>
-                <div class="task-meta">
-                  <span class="task-project">{{ task.project }}</span>
-                  <span class="task-deadline" :class="{ urgent: isUrgent(task.deadline) }">{{ task.deadline }}</span>
+
+        <section v-show="activeTab === 'logs'">
+          <div class="grid-2-1">
+            <div class="editor-block">
+              <div class="editor-card glass-panel-strong">
+                <div style="display: flex; justify-content: space-between; gap: 16px; align-items: center;">
+                  <h2 class="section-title">今日日志</h2>
+                  <button class="btn-primary"><span class="material-symbols-outlined">auto_awesome</span>AI 一键生成</button>
                 </div>
-                <div class="task-progress" v-if="task.progress">
-                  <div class="progress-bar">
-                    <div class="progress-fill" :style="{ width: task.progress + '%' }"></div>
+                <div class="editor-toolbar" style="margin-top: 16px;">
+                  <button class="btn-chip">加粗</button>
+                  <button class="btn-chip">列表</button>
+                  <button class="btn-chip">链接</button>
+                  <button class="btn-chip">@成员</button>
+                </div>
+              </div>
+
+              <div class="editor-card glass-panel-strong">
+                <h3 class="section-title">今日完成</h3>
+                <div class="editor-area">1. 完成 Q3 实验室能效评估报告初稿；2. 审核联调验证阶段的任务分配；3. 同步日报结构化字段到工作台。</div>
+              </div>
+
+              <div class="editor-card glass-panel-strong">
+                <h3 class="section-title">明日计划</h3>
+                <div class="editor-area">1. 跟进平台组联调环境准备；2. 与 QA 确认回归验证样本池；3. 更新 PBC 目标与任务绑定关系。</div>
+              </div>
+
+              <div class="editor-card glass-panel-strong">
+                <h3 class="section-title">阻塞问题</h3>
+                <div class="editor-area">当前“联调环境参数回灌”任务仍缺少资源窗口确认，建议今天 15:00 前与平台组和 QA 共同确认。</div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+              <div class="glass-panel" style="padding: 24px; border-radius: 24px;">
+                <h2 class="section-title">今日焦点</h2>
+                <div class="summary-kpis" style="margin-top: 16px;">
+                  <div class="summary-kpi">
+                    <span>待办任务</span>
+                    <strong>7 项</strong>
                   </div>
-                  <span class="progress-text">{{ task.progress }}%</span>
+                  <div class="summary-kpi">
+                    <span>日志互动</span>
+                    <strong>12 条</strong>
+                  </div>
+                </div>
+                <p class="page-subtitle" style="font-size: 14px; margin-top: 16px;">AI 判断你今天最值得优先处理的是“联调环境参数回灌”和“P0 代码评审”。</p>
+              </div>
+
+              <div class="glass-panel" style="padding: 24px; border-radius: 24px; background: linear-gradient(180deg, rgba(236,220,255,0.28), rgba(255,255,255,0.42));">
+                <h2 class="section-title">AI 日志建议</h2>
+                <p class="page-subtitle" style="font-size: 14px; margin-top: 14px;">你今天完成的 3 个任务中，有 2 个可自动映射到日报“今日完成”模块，并自动补齐风险项描述。</p>
+                <div class="ai-actions">
+                  <button class="btn-primary">一键填充</button>
+                  <button class="btn-secondary">仅生成草稿</button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      <!-- PBC Tab -->
-      <div v-if="activeTab === 'pbc'" class="pbc-tab">
-        <div class="pbc-header">
-          <h2>个人绩效目标</h2>
-          <button class="create-pbc-btn">创建 PBC 目标</button>
-        </div>
-        <div class="pbc-filters">
-          <select v-model="pbcPeriodFilter">
-            <option value="all">全部周期</option>
-            <option value="2026年Q2">2026年Q2</option>
-            <option value="2026年Q1">2026年Q1</option>
-          </select>
-        </div>
-        <div class="pbc-list">
-          <div class="pbc-item" v-for="pbc in filteredPBCGoals" :key="pbc.id">
-            <div class="pbc-header">
-              <h3>{{ pbc.title }}</h3>
-              <div class="pbc-header-actions">
-                <span class="pbc-progress">{{ pbc.progress }}%</span>
-                <span class="pbc-status" :class="pbc.status">{{ pbc.statusText }}</span>
+
+          <div class="glass-panel" style="padding: 24px; border-radius: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+              <h2 class="section-title">最近日志互动</h2>
+              <button class="btn-chip active">查看全部</button>
+            </div>
+            <div class="timeline" style="margin-top: 18px;">
+              <div class="timeline-item">
+                <span class="timeline-dot" style="background: var(--color-primary-600);"></span>
+                <div class="timeline-body">
+                  <h4>陈思远 评论了你的日志</h4>
+                  <p>“联调准备时间的描述建议补充 QA 的确认时间点，我这边已同步到看板。”</p>
+                  <span>今天 11:24</span>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <span class="timeline-dot" style="background: var(--color-tertiary-600);"></span>
+                <div class="timeline-body">
+                  <h4>AI 已生成晨报摘要</h4>
+                  <p>可直接导出 Markdown 或继续补充阻塞问题与明日计划。</p>
+                  <span>今天 10:58</span>
+                </div>
               </div>
             </div>
-            <div class="pbc-progress-bar">
-              <div class="progress-fill" :style="{ width: pbc.progress + '%', backgroundColor: getProgressColor(pbc.progress) }"></div>
-            </div>
-            <div class="pbc-meta">
-              <span class="pbc-period">{{ pbc.period }}</span>
-              <span class="pbc-type">{{ pbc.type }}</span>
-            </div>
-            <div class="pbc-actions">
-              <button class="assess-btn" v-if="pbc.status === 'in_progress'">自评</button>
-              <button class="feedback-btn" v-if="pbc.status === 'pending_feedback'">上级反馈</button>
-              <button class="view-btn">查看详情</button>
+          </div>
+        </section>
+
+        <section v-show="activeTab === 'kanban'">
+          <div class="glass-panel filter-bar">
+            <button class="btn-chip active">全部状态</button>
+            <button class="btn-chip">P0 / P1</button>
+            <button class="btn-chip">本周截止</button>
+            <button class="btn-chip">仅阻塞</button>
+            <div style="margin-left: auto;">
+              <button class="btn-primary" @click="openModal"><span class="material-symbols-outlined">add</span>新建任务</button>
             </div>
           </div>
+          <div class="kanban">
+            <div class="kanban-column glass-panel">
+              <div class="kanban-column-header">
+                <h3>纳米晶体结构优化</h3>
+                <span class="pill pill-neutral">3</span>
+              </div>
+              <div class="kanban-card" role="button" tabindex="0" style="cursor: pointer;" @click="handleNavigate('/task/1')">
+                <h4>更新联调验证脚本</h4>
+                <div class="kanban-meta">
+                  <span class="micro-tag p1">P1</span>
+                  <span class="micro-tag">里程碑</span>
+                </div>
+                <p class="task-note">截止：今天 18:00 · 进度：65%</p>
+              </div>
+              <div class="kanban-card">
+                <h4>同步样本误差分析结论</h4>
+                <div class="kanban-meta">
+                  <span class="micro-tag p2">P2</span>
+                  <span class="micro-tag">PBC 绑定</span>
+                </div>
+                <p class="task-note">截止：明天 12:00 · 进度：30%</p>
+              </div>
+            </div>
+
+            <div class="kanban-column glass-panel">
+              <div class="kanban-column-header">
+                <h3>深度学习实验室自动化</h3>
+                <span class="pill pill-neutral">2</span>
+              </div>
+              <div class="kanban-card">
+                <h4>设计自动化巡检告警</h4>
+                <div class="kanban-meta">
+                  <span class="micro-tag p0">P0</span>
+                  <span class="micro-tag">阻塞风险</span>
+                </div>
+                <p class="task-note">截止：周三 · 进度：45%</p>
+              </div>
+              <div class="kanban-card">
+                <h4>补齐 SOP 文档结构</h4>
+                <div class="kanban-meta">
+                  <span class="micro-tag p3">P3</span>
+                </div>
+                <p class="task-note">截止：周五 · 进度：20%</p>
+              </div>
+            </div>
+
+            <div class="kanban-column glass-panel">
+              <div class="kanban-column-header">
+                <h3>量子纠缠通信协议 V2</h3>
+                <span class="pill pill-neutral">1</span>
+              </div>
+              <div class="kanban-card">
+                <h4>确认阻塞依赖任务说明</h4>
+                <div class="kanban-meta">
+                  <span class="micro-tag p0">P0</span>
+                  <span class="micro-tag" style="color: var(--color-danger-600); background: rgba(255,218,214,0.82);">已阻塞</span>
+                </div>
+                <p class="task-note">阻塞原因：协议接口未冻结</p>
+              </div>
+            </div>
+
+            <div class="kanban-column glass-panel">
+              <div class="kanban-column-header">
+                <h3>通用事项</h3>
+                <span class="pill pill-neutral">2</span>
+              </div>
+              <div class="kanban-card">
+                <h4>完成本周 PBC 自评</h4>
+                <div class="kanban-meta">
+                  <span class="micro-tag p1">P1</span>
+                </div>
+                <p class="task-note">截止：本周五 · 进度：55%</p>
+              </div>
+              <div class="kanban-card">
+                <h4>整理团队日报最佳实践</h4>
+                <div class="kanban-meta">
+                  <span class="micro-tag p2">P2</span>
+                </div>
+                <p class="task-note">截止：下周一 · 进度：15%</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section v-show="activeTab === 'pbc'">
+          <div class="grid-2-1">
+            <div style="display: flex; flex-direction: column; gap: 18px;">
+              <div class="goal-card glass-panel">
+                <div class="goal-header">
+                  <div>
+                    <span class="pill pill-success">数值型目标</span>
+                    <h2 class="section-title" style="margin-top: 12px;">提升团队协作效率</h2>
+                    <p class="page-subtitle" style="font-size: 15px; margin-top: 8px;">对齐部门 OKR：缩短联调和日报协作耗时。</p>
+                  </div>
+                  <span class="pill pill-ai">达成率 64%</span>
+                </div>
+                <div class="progress-track" style="margin-top: 18px;"><div class="progress-fill" style="width: 64%; background: linear-gradient(90deg, var(--color-primary-400), var(--color-primary-700));"></div></div>
+                <div class="summary-kpis" style="margin-top: 16px;">
+                  <div class="summary-kpi">
+                    <span>绑定任务</span>
+                    <strong>8 个</strong>
+                  </div>
+                  <div class="summary-kpi">
+                    <span>已完成</span>
+                    <strong>5 个</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="goal-card glass-panel">
+                <div class="goal-header">
+                  <div>
+                    <span class="pill pill-warning">里程碑型目标</span>
+                    <h2 class="section-title" style="margin-top: 12px;">完成协作管理系统首版上线</h2>
+                    <p class="page-subtitle" style="font-size: 15px; margin-top: 8px;">对齐季度 KPI：完成项目全生命周期协同平台首版交付。</p>
+                  </div>
+                  <span class="pill pill-warning">待上级反馈</span>
+                </div>
+                <div class="progress-track" style="margin-top: 18px;"><div class="progress-fill" style="width: 51%; background: linear-gradient(90deg, #f7c455, var(--color-warning-600));"></div></div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+              <div class="glass-panel" style="padding: 24px; border-radius: 24px;">
+                <h2 class="section-title">周期评估对话</h2>
+                <div class="feedback-thread" style="margin-top: 18px;">
+                  <div class="feedback-bubble self">自评：本周期已完成 5 个关键任务，联调与日报效率改造推进正常，但成员负载治理仍需继续跟进。</div>
+                  <div class="feedback-bubble manager">上级反馈：方向正确，建议下周期把“负载热力图 + 智能分配”作为核心推进项，并补齐反馈闭环。</div>
+                </div>
+              </div>
+
+              <div class="glass-panel" style="padding: 24px; border-radius: 24px; background: linear-gradient(180deg, rgba(236,220,255,0.28), rgba(255,255,255,0.42));">
+                <h2 class="section-title">AI 趋势提示</h2>
+                <p class="page-subtitle" style="font-size: 14px; margin-top: 14px;">按照当前任务完成速度，本周期 PBC 达成率预计将在 7 天内提升至 73%。建议优先绑定两项联调收尾任务。</p>
+                <div class="ai-actions">
+                  <button class="btn-primary">自动绑定任务</button>
+                  <button class="btn-secondary">查看趋势图</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-shell" :class="{ open: isModalOpen }">
+    <div class="modal-backdrop" @click="closeModal"></div>
+    <section class="modal-panel glass-panel-strong workbench-task-modal">
+      <div class="modal-header">
+        <div>
+          <span class="pill pill-ai">新建任务</span>
+          <h2 class="section-title" style="font-size: 28px; margin-top: 14px;">创建个人任务草稿</h2>
+          <p class="page-subtitle" style="font-size: 15px; margin-top: 10px;">围绕个人工作台的日志、看板和 PBC 场景组织字段，先完成任务的项目归属、优先级、截止时间、日志同步和目标绑定，再进入看板持续推进。</p>
+        </div>
+        <button class="icon-btn" @click="closeModal"><span class="material-symbols-outlined">close</span></button>
+      </div>
+
+      <div class="workbench-task-layout">
+        <aside class="workbench-task-side">
+          <article class="glass-panel workbench-task-card">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <span class="pill pill-warning">待处理</span>
+              <span class="pill pill-ai">个人协同</span>
+            </div>
+            <h3 class="section-title" style="font-size: 26px; margin-top: 16px;">新建任务草稿</h3>
+            <p class="page-subtitle" style="font-size: 14px; margin-top: 12px;">适合作为工作台的快速任务入口，创建后可直接进入个人看板，也能同步到今日日志和 PBC 目标，减少在多个页面来回维护。</p>
+
+            <div class="workbench-task-kpis">
+              <div class="workbench-task-kpi">
+                <span>默认状态</span>
+                <strong>待开始</strong>
+              </div>
+              <div class="workbench-task-kpi">
+                <span>推荐优先级</span>
+                <strong>P1 / P2</strong>
+              </div>
+              <div class="workbench-task-kpi">
+                <span>日志同步</span>
+                <strong>可开启</strong>
+              </div>
+              <div class="workbench-task-kpi">
+                <span>PBC 绑定</span>
+                <strong>可选</strong>
+              </div>
+            </div>
+
+            <div class="workbench-task-step-list">
+              <div class="workbench-task-step">
+                <div class="workbench-task-step-index">1</div>
+                <div>
+                  <h4>明确任务归属</h4>
+                  <p>关联项目、负责人和任务类型会直接影响个人看板的列分布以及后续搜索筛选结果。</p>
+                </div>
+              </div>
+              <div class="workbench-task-step">
+                <div class="workbench-task-step-index">2</div>
+                <div>
+                  <h4>同步日志与提醒</h4>
+                  <p>可在创建时决定是否把任务同步到今日日志、明日计划或阻塞问题区，减少重复记录。</p>
+                </div>
+              </div>
+              <div class="workbench-task-step">
+                <div class="workbench-task-step-index">3</div>
+                <div>
+                  <h4>考虑 PBC 绑定</h4>
+                  <p>如果任务属于本周期重点推进事项，建议直接绑定目标，便于在工作台里跟踪达成率变化。</p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="glass-panel workbench-task-card" style="background: linear-gradient(180deg, rgba(236,220,255,0.32), rgba(255,255,255,0.42));">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="material-symbols-outlined" style="color: var(--color-tertiary-600);">psychology</span>
+              <h3 class="section-title" style="font-size: 22px;">AI 创建建议</h3>
+            </div>
+            <div class="workbench-task-step-list">
+              <div class="workbench-task-step">
+                <div class="workbench-task-step-index">A</div>
+                <div>
+                  <h4>优先补齐联调收尾任务</h4>
+                  <p>如果任务和联调验证相关，建议直接设置为 P1，并补上验证说明，避免在看板中长期停留在“进行中”。</p>
+                </div>
+              </div>
+              <div class="workbench-task-step">
+                <div class="workbench-task-step-index">B</div>
+                <div>
+                  <h4>能绑定 PBC 就不要后补</h4>
+                  <p>当前你的工作台里还有 2 个任务尚未绑定目标，新建阶段就补齐会让周期趋势和上级反馈更完整。</p>
+                </div>
+              </div>
+            </div>
+            <div class="workbench-task-owner-grid">
+              <span class="workbench-task-owner"><img src="https://i.pravatar.cc/80?img=12" alt="张工" />张工</span>
+              <span class="workbench-task-owner"><img src="https://i.pravatar.cc/80?img=22" alt="陈思远" />陈思远</span>
+              <span class="workbench-task-owner"><img src="https://i.pravatar.cc/80?img=33" alt="王雅婷" />王雅婷</span>
+            </div>
+          </article>
+        </aside>
+
+        <div class="workbench-task-main">
+          <article class="glass-panel workbench-task-card">
+            <div class="workbench-task-card-head">
+              <div>
+                <h3 class="section-title" style="font-size: 22px;">基础信息</h3>
+                <p class="section-caption" style="margin-top: 6px;">对应个人看板任务卡的主要展示字段</p>
+              </div>
+              <span class="pill pill-neutral">任务主字段</span>
+            </div>
+
+            <div class="field-inline">
+              <div class="field-stack">
+                <label class="field-label">任务名称</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">task</span>
+                  <input type="text" value="补齐联调验证说明与样本校验结论" />
+                </div>
+              </div>
+              <div class="field-stack">
+                <label class="field-label">关联项目</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">account_tree</span>
+                  <select>
+                    <option>纳米晶体结构优化</option>
+                    <option>深度学习实验室自动化</option>
+                    <option>通用事项</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="workbench-task-field-grid" style="margin-top: 16px;">
+              <div class="field-stack">
+                <label class="field-label">负责人</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">person</span>
+                  <select>
+                    <option>张工</option>
+                    <option>陈思远</option>
+                    <option>王雅婷</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-stack">
+                <label class="field-label">任务优先级</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">flag</span>
+                  <select>
+                    <option>P1</option>
+                    <option>P0</option>
+                    <option>P2</option>
+                    <option>P3</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-stack">
+                <label class="field-label">任务状态</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">pending_actions</span>
+                  <select>
+                    <option>待开始</option>
+                    <option>进行中</option>
+                    <option>待评审</option>
+                    <option>已完成</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="workbench-task-template-grid">
+              <div class="workbench-task-template active">
+                <h4>日志跟进任务</h4>
+                <p>适合从今日日志或明日计划中拆出明确动作项，创建后可同步回日志区。</p>
+              </div>
+              <div class="workbench-task-template">
+                <h4>看板推进任务</h4>
+                <p>适合在个人看板中持续跟踪的执行项，强调截止时间、优先级和进度表达。</p>
+              </div>
+              <div class="workbench-task-template">
+                <h4>PBC 绑定任务</h4>
+                <p>适合直接关联本周期目标，便于后续自动统计任务完成对目标的贡献度。</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="glass-panel workbench-task-card">
+            <div class="workbench-task-card-head">
+              <div>
+                <h3 class="section-title" style="font-size: 22px;">计划与说明</h3>
+                <p class="section-caption" style="margin-top: 6px;">用于截止提醒、阻塞标记和任务卡补充说明</p>
+              </div>
+              <span class="pill pill-success">推进信息</span>
+            </div>
+
+            <div class="field-inline">
+              <div class="field-stack">
+                <label class="field-label">开始日期</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">calendar_today</span>
+                  <input type="text" value="2026-04-28" />
+                </div>
+              </div>
+              <div class="field-stack">
+                <label class="field-label">截止日期</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">event</span>
+                  <input type="text" value="2026-04-29 18:00" />
+                </div>
+              </div>
+            </div>
+
+            <div class="workbench-task-field-grid" style="margin-top: 16px;">
+              <div class="field-stack">
+                <label class="field-label">预计工时</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">schedule</span>
+                  <input type="text" value="1.5d" />
+                </div>
+              </div>
+              <div class="field-stack">
+                <label class="field-label">当前进度</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">progress_activity</span>
+                  <input type="text" value="0%" />
+                </div>
+              </div>
+              <div class="field-stack">
+                <label class="field-label">风险标记</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">warning</span>
+                  <select>
+                    <option>无</option>
+                    <option>阻塞风险</option>
+                    <option>联调风险</option>
+                    <option>资源风险</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="workbench-task-status-grid">
+              <div class="workbench-task-status-card">
+                <span>提醒方式</span>
+                <strong>站内 + 企微</strong>
+              </div>
+              <div class="workbench-task-status-card">
+                <span>默认列</span>
+                <strong>待开始</strong>
+              </div>
+              <div class="workbench-task-status-card">
+                <span>日志同步</span>
+                <strong>今天完成</strong>
+              </div>
+              <div class="workbench-task-status-card">
+                <span>PBC 归属</span>
+                <strong>可绑定</strong>
+              </div>
+            </div>
+
+            <div class="field-stack workbench-task-textarea" style="margin-top: 16px;">
+              <label class="field-label">任务说明</label>
+              <div class="field-input">
+                <span class="material-symbols-outlined" style="margin-top: 16px;">notes</span>
+                <textarea>补齐联调验证中的说明文本、样本校验结论与相关引用，确保任务可以从“进行中”顺利推进到“待评审”，并为今日日志和 PBC 绑定保留可追踪依据。</textarea>
+              </div>
+            </div>
+
+            <div class="workbench-task-chip-row">
+              <button class="permission-chip on" type="button">同步到今日日志</button>
+              <button class="permission-chip on" type="button">加入明日计划</button>
+              <button class="permission-chip" type="button">标记为阻塞</button>
+              <button class="permission-chip" type="button">@协作成员</button>
+              <button class="permission-chip" type="button">生成子任务</button>
+            </div>
+          </article>
+
+          <article class="glass-panel workbench-task-card">
+            <div class="workbench-task-card-head">
+              <div>
+                <h3 class="section-title" style="font-size: 22px;">日志与 PBC 绑定</h3>
+                <p class="section-caption" style="margin-top: 6px;">对应工作台日志区和 PBC 目标区的联动入口</p>
+              </div>
+              <span class="pill pill-warning">目标同步</span>
+            </div>
+
+            <div class="field-inline">
+              <div class="field-stack">
+                <label class="field-label">日志归属区块</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">article</span>
+                  <select>
+                    <option>今日完成</option>
+                    <option>明日计划</option>
+                    <option>阻塞问题</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-stack">
+                <label class="field-label">绑定 PBC 目标</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">target</span>
+                  <select>
+                    <option>提升团队协作效率</option>
+                    <option>完成协作管理系统首版上线</option>
+                    <option>暂不绑定</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="workbench-task-field-grid" style="margin-top: 16px;">
+              <div class="field-stack">
+                <label class="field-label">评审人</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">rate_review</span>
+                  <select>
+                    <option>陈思远</option>
+                    <option>王雅婷</option>
+                    <option>张工</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-stack">
+                <label class="field-label">通知对象</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">forward_to_inbox</span>
+                  <input type="text" value="PM、QA、协作成员" />
+                </div>
+              </div>
+              <div class="field-stack">
+                <label class="field-label">任务标签</label>
+                <div class="field-input">
+                  <span class="material-symbols-outlined">sell</span>
+                  <input type="text" value="联调 / PBC / 验证说明" />
+                </div>
+              </div>
+            </div>
+
+            <div class="workbench-task-chip-row">
+              <button class="permission-chip on" type="button">同步个人看板</button>
+              <button class="permission-chip on" type="button">绑定 PBC 趋势</button>
+              <button class="permission-chip on" type="button">进入待评审提醒</button>
+              <button class="permission-chip" type="button">自动补齐日志草稿</button>
+              <button class="permission-chip" type="button">通知上级反馈</button>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-status">
+          <span class="material-symbols-outlined">add_task</span>
+          当前为样式参考弹窗，字段已按日志、看板和 PBC 三个工作台场景组织。
+        </div>
+        <div class="modal-footer-actions">
+          <button class="btn-secondary" @click="closeModal"><span class="material-symbols-outlined">close</span>取消</button>
+          <button class="btn-secondary" @click="showToast('任务草稿已保存', '新建任务弹窗中的当前内容已保存为草稿，可继续调整字段与布局。', 'draft')"><span class="material-symbols-outlined">draft</span>保存草稿</button>
+          <button class="btn-primary" @click="showToast('任务已创建', '任务草稿已同步到个人看板，并预留日志区与 PBC 目标的联动入口。', 'task_alt')"><span class="material-symbols-outlined">rocket_launch</span>创建任务</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <button class="floating-ai-btn" @click="toggleAiDrawer"><span class="material-symbols-outlined">auto_awesome</span></button>
+  <div class="ai-overlay" :class="{ open: isAiDrawerOpen }" @click="closeAiDrawer"></div>
+  <aside class="ai-drawer" :class="{ open: isAiDrawerOpen }">
+    <div class="ai-header">
+      <div>
+        <h3>AI 助手</h3>
+        <p class="section-caption">当前上下文：个人工作台</p>
+      </div>
+      <button class="icon-btn" @click="closeAiDrawer"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="ai-card">
+      <h4>工作建议</h4>
+      <p>建议先生成今日日志草稿，再处理 2 个 P0 任务；这两个动作都可直接提升你的 PBC 达成率，并同步给上级看到进展。</p>
+      <div class="ai-actions">
+        <button class="btn-primary">立即生成</button>
+        <button class="btn-secondary">稍后提醒</button>
+      </div>
+    </div>
+    <div class="ai-list">
+      <div class="ai-list-item">
+        <h4>看板提醒</h4>
+        <p>“设计自动化巡检告警”已接近截止时间，建议今天转为待评审前至少补齐验证说明。</p>
+      </div>
+      <div class="ai-list-item">
+        <h4>PBC 建议</h4>
+        <p>当前有 2 个任务尚未绑定目标，自动关联后你的周期趋势会更完整。</p>
+      </div>
+    </div>
+  </aside>
+
+  <Transition name="toast">
+    <div v-if="toast.show" class="toast-shell">
+      <div class="toast">
+        <span class="material-symbols-outlined">{{ toast.icon }}</span>
+        <div>
+          <h4>{{ toast.title }}</h4>
+          <p>{{ toast.message }}</p>
         </div>
       </div>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { logs as mockLogs, tasks as mockTasks, pbcGoals as mockPbcGoals } from '../data/mockData.js'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { pushAppPath } from '../utils/navigation'
+import UserProfileHoverCard from '../components/topbar/UserProfileHoverCard.vue'
+
+const router = useRouter()
+const currentUser = {
+  name: '张工',
+  role: '研发总监',
+  avatar: 'https://i.pravatar.cc/80?img=12'
+}
 
 const activeTab = ref('logs')
-const logFilter = ref('all')
-const kanbanFilter = ref('all')
-const pbcPeriodFilter = ref('all')
-const expandedComments = ref([])
-const newComment = ref('')
+const isModalOpen = ref(false)
+const isAiDrawerOpen = ref(false)
+const toast = ref({ show: false, title: '', message: '', icon: '' })
 
-const logs = ref(mockLogs.map(log => ({
-  ...log,
-  author: log.userName,
-  today: log.completed,
-  tomorrow: log.plan,
-  blockers: log.issues,
-  liked: false
-})))
-
-const kanbanColumns = ref([
-  { id: 'todo', name: '待开始' },
-  { id: 'in_progress', name: '进行中' },
-  { id: 'review', name: '待评审' },
-  { id: 'done', name: '已完成' }
-])
-
-const tasks = ref(mockTasks.map(task => ({
-  ...task,
-  status: task.status === '待开始' ? 'todo' : 
-          task.status === '进行中' ? 'in_progress' : 
-          task.status === '待评审' ? 'review' : 'done',
-  project: '智能办公系统',
-  progress: task.actualHours / task.estimatedHours * 100 || 0
-})))
-
-const pbcGoals = ref(mockPbcGoals.map(goal => ({
-  ...goal,
-  period: '2026年Q2',
-  status: goal.status === '进行中' ? 'in_progress' : 'completed',
-  statusText: goal.status
-})))
-
-const filteredLogs = computed(() => {
-  if (logFilter.value === 'mine') {
-    return logs.value.filter(log => log.author === '张三')
-  } else if (logFilter.value === 'team') {
-    return logs.value.filter(log => log.author !== '张三')
-  }
-  return logs.value
-})
-
-const filteredPBCGoals = computed(() => {
-  if (pbcPeriodFilter.value === 'all') {
-    return pbcGoals.value
-  }
-  return pbcGoals.value.filter(pbc => pbc.period === pbcPeriodFilter.value)
-})
-
-const getTasksByStatus = (status) => {
-  let filtered = tasks.value.filter(task => task.status === status)
-  if (kanbanFilter.value !== 'all') {
-    filtered = filtered.filter(task => task.project === kanbanFilter.value)
-  }
-  return filtered
+const handleNavigate = (path) => {
+  pushAppPath(router, path)
 }
 
-const toggleLike = (logId) => {
-  const log = logs.value.find(log => log.id === logId)
-  if (log) {
-    log.liked = !log.liked
-    log.likes += log.liked ? 1 : -1
-  }
+const openModal = () => {
+  isModalOpen.value = true
 }
 
-const toggleComments = (logId) => {
-  const index = expandedComments.value.indexOf(logId)
-  if (index > -1) {
-    expandedComments.value.splice(index, 1)
-  } else {
-    expandedComments.value.push(logId)
-  }
+const closeModal = () => {
+  isModalOpen.value = false
 }
 
-const addComment = (logId) => {
-  if (newComment.value.trim()) {
-    const log = logs.value.find(log => log.id === logId)
-    if (log) {
-      log.comments.push({
-        id: log.comments.length + 1,
-        author: '张三',
-        content: newComment.value,
-        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-      })
-      newComment.value = ''
-    }
-  }
+const toggleAiDrawer = () => {
+  isAiDrawerOpen.value = !isAiDrawerOpen.value
 }
 
-const generateLogWithAI = () => {
-  // 模拟AI生成日志
-  alert('AI正在生成日志...')
+const closeAiDrawer = () => {
+  isAiDrawerOpen.value = false
+}
+
+const showToast = (title, message, icon) => {
+  toast.value = { show: true, title, message, icon }
   setTimeout(() => {
-    alert('日志生成完成，请修改后提交')
-  }, 1000)
-}
-
-const isUrgent = (deadline) => {
-  const today = new Date()
-  const taskDate = new Date(deadline)
-  const diffTime = taskDate - today
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return diffDays <= 1
-}
-
-const getProgressColor = (progress) => {
-  if (progress >= 80) {
-    return '#52C41A'
-  } else if (progress >= 50) {
-    return '#1890FF'
-  } else {
-    return '#FAAD14'
-  }
+    toast.value.show = false
+  }, 3000)
 }
 </script>
 
 <style scoped>
-.workbench {
-  padding: 20px;
+.workbench-task-modal {
+  width: min(1180px, calc(100vw - 48px));
 }
 
-.workbench-header {
-  margin-bottom: 30px;
-}
-
-.workbench-header h1 {
-  font-size: 24px;
-  color: #333;
-}
-
-.workbench-tabs {
-  display: flex;
+.workbench-task-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.92fr) minmax(0, 1.38fr);
   gap: 20px;
-  margin-bottom: 30px;
-  border-bottom: 1px solid #f0f2f5;
 }
 
-.tab-btn {
-  padding: 10px 0;
-  border: none;
-  background: none;
-  font-size: 16px;
-  color: #606266;
-  cursor: pointer;
-  position: relative;
-}
-
-.tab-btn.active {
-  color: #1890FF;
-  font-weight: 500;
-}
-
-.tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: #1890FF;
-}
-
-.workbench-content {
-  min-height: 500px;
-}
-
-/* 日志 Tab */
-.logs-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.write-log-btn {
-  background-color: #1890FF;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.write-log-btn:hover {
-  background-color: #40a9ff;
-}
-
-.log-filter select {
-  padding: 8px 12px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.log-list {
+.workbench-task-side {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
-.log-item {
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.log-header {
+.workbench-task-main {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.workbench-task-card {
+  padding: 20px;
+  border-radius: 24px;
+}
+
+.workbench-task-card h3,
+.workbench-task-card p {
+  margin: 0;
+}
+
+.workbench-task-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.workbench-task-kpi {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+}
+
+.workbench-task-kpi span,
+.workbench-task-kpi strong {
+  display: block;
+}
+
+.workbench-task-kpi span {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.workbench-task-kpi strong {
+  margin-top: 8px;
+  font-size: 18px;
+}
+
+.workbench-task-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.workbench-task-step {
+  display: flex;
+  gap: 12px;
   align-items: flex-start;
-  margin-bottom: 15px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.58);
 }
 
-.log-date-author {
+.workbench-task-step-index {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--color-primary-700);
+  background: rgba(20, 104, 199, 0.12);
+  border: 1px solid rgba(20, 104, 199, 0.16);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.workbench-task-step h4,
+.workbench-task-step p {
+  margin: 0;
+}
+
+.workbench-task-step p {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.workbench-task-owner-grid {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
 }
 
-.log-date-author h3 {
+.workbench-task-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 14px 0 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(216, 221, 232, 0.88);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.workbench-task-owner img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+}
+
+.workbench-task-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.workbench-task-card-head h3,
+.workbench-task-card-head p {
+  margin: 0;
+}
+
+.workbench-task-field-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.workbench-task-template-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.workbench-task-template {
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.workbench-task-template.active {
+  background: rgba(20, 104, 199, 0.1);
+  border-color: rgba(20, 104, 199, 0.18);
+}
+
+.workbench-task-template:hover {
+  transform: translateY(-1px);
+}
+
+.workbench-task-template h4,
+.workbench-task-template p {
+  margin: 0;
+}
+
+.workbench-task-template p {
+  margin-top: 8px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.workbench-task-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.workbench-task-textarea .field-input {
+  align-items: flex-start;
+  min-height: 136px;
+}
+
+.workbench-task-textarea textarea {
+  min-height: 108px;
+}
+
+.workbench-task-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.workbench-task-status-card {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+}
+
+.workbench-task-status-card span,
+.workbench-task-status-card strong {
+  display: block;
+}
+
+.workbench-task-status-card span {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.workbench-task-status-card strong {
+  margin-top: 8px;
   font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
 }
 
-.log-author {
-  font-size: 14px;
-  color: #909399;
+.workbench-page-stack .editor-card,
+.workbench-page-stack .goal-card,
+.workbench-page-stack .kanban-column {
+  padding: 24px;
+  border-radius: 24px;
 }
 
-.log-actions {
-  display: flex;
-  gap: 15px;
+.workbench-page-stack .section-title {
+  font-size: 24px;
 }
 
-.like-btn, .comment-btn {
-  background: none;
-  border: none;
-  font-size: 14px;
-  cursor: pointer;
-  color: #606266;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.3s;
-}
-
-.like-btn:hover, .comment-btn:hover {
-  background-color: #f0f2f5;
-}
-
-.like-btn.liked {
-  color: #FF4D4F;
-}
-
-.log-content {
-  margin-bottom: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.log-section {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.log-section h4 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-}
-
-.log-section p {
-  font-size: 14px;
-  color: #666;
-  margin: 0;
-  line-height: 1.5;
-}
-
-.log-comments {
-  border-top: 1px solid #f0f2f5;
-  padding-top: 15px;
-  margin-bottom: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.comment-item {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.comment-header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: #909399;
-}
-
-.comment-content {
-  font-size: 14px;
-  color: #666;
-  line-height: 1.4;
-}
-
-.add-comment {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.add-comment input {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
+.workbench-page-stack .editor-area {
+  min-height: 136px;
+  padding: 18px;
   font-size: 14px;
 }
 
-.comment-submit-btn {
-  background-color: #1890FF;
-  color: white;
-  border: none;
-  padding: 0 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
+.workbench-page-stack .kanban {
+  gap: 24px;
 }
 
-.comment-submit-btn:hover {
-  background-color: #40a9ff;
+.workbench-page-stack .tab-switcher {
+  padding: 10px;
+  border-radius: 22px;
 }
 
-.log-footer {
-  display: flex;
-  justify-content: flex-end;
+.workbench-page-stack .tab-btn {
+  min-height: 42px;
+  padding: 0 18px;
 }
 
-.ai-generate-btn {
-  background-color: #f5f7fa;
-  color: #1890FF;
-  border: 1px solid #dcdfe6;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
+@media (max-width: 1279px) {
+  .workbench-task-layout,
+  .workbench-task-field-grid,
+  .workbench-task-template-grid,
+  .workbench-task-status-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.ai-generate-btn:hover {
-  background-color: #ecf5ff;
+/* Toast 动画 */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
 }
 
-/* 看板 Tab */
-.kanban-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.kanban-header h2 {
-  font-size: 18px;
-  color: #333;
-  margin: 0;
-}
-
-.kanban-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.kanban-actions .add-task-btn {
-  background-color: #1890FF;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.kanban-actions .add-task-btn:hover {
-  background-color: #40a9ff;
-}
-
-.kanban-actions select {
-  padding: 8px 12px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.kanban-tab {
-  overflow-x: auto;
-}
-
-.kanban-columns {
-  display: flex;
-  gap: 20px;
-  padding-bottom: 20px;
-}
-
-.kanban-column {
-  flex: 0 0 300px;
-  background-color: #f5f7fa;
-  border-radius: 8px;
-  padding: 15px;
-  min-height: 500px;
-}
-
-.column-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.column-header h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-}
-
-.task-count {
-  background-color: #dcdfe6;
-  color: #606266;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.task-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.task-card {
-  background-color: white;
-  border-radius: 6px;
-  padding: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: all 0.3s;
-  position: relative;
-}
-
-.task-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.task-priority {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.task-priority.P0 {
-  background-color: #fef0f0;
-  color: #FF4D4F;
-}
-
-.task-priority.P1 {
-  background-color: #fdf6ec;
-  color: #FAAD14;
-}
-
-.task-priority.P2 {
-  background-color: #ecf5ff;
-  color: #1890FF;
-}
-
-.task-priority.P3 {
-  background-color: #f5f7fa;
-  color: #909399;
-}
-
-.task-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-  margin: 0 0 10px 0;
-  line-height: 1.4;
-  padding-right: 60px;
-}
-
-.task-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: #909399;
-  margin-bottom: 10px;
-}
-
-.task-deadline.urgent {
-  color: #FF4D4F;
-  font-weight: 500;
-}
-
-.task-progress {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.task-progress .progress-bar {
-  flex: 1;
-  height: 6px;
-  background-color: #f0f2f5;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.task-progress .progress-fill {
-  height: 100%;
-  background-color: #1890FF;
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  font-size: 12px;
-  color: #666;
-  min-width: 40px;
-}
-
-/* PBC Tab */
-.pbc-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.pbc-header h2 {
-  font-size: 18px;
-  color: #333;
-  margin: 0;
-}
-
-.create-pbc-btn {
-  background-color: #1890FF;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.create-pbc-btn:hover {
-  background-color: #40a9ff;
-}
-
-.pbc-filters {
-  margin-bottom: 20px;
-}
-
-.pbc-filters select {
-  padding: 8px 12px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.pbc-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.pbc-item {
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.pbc-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.pbc-header h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-}
-
-.pbc-header-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.pbc-progress {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1890FF;
-}
-
-.pbc-status {
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.pbc-status.进行中 {
-  background-color: #ecf5ff;
-  color: #1890FF;
-}
-
-.pbc-status.已完成 {
-  background-color: #f0f9eb;
-  color: #52C41A;
-}
-
-.pbc-status.待反馈 {
-  background-color: #fdf6ec;
-  color: #FAAD14;
-}
-
-.pbc-progress-bar {
-  width: 100%;
-  height: 8px;
-  background-color: #f0f2f5;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 15px;
-}
-
-.pbc-progress-bar .progress-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.3s ease;
-}
-
-.pbc-meta {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 15px;
-  font-size: 14px;
-  color: #666;
-}
-
-.pbc-type {
-  background-color: #f5f7fa;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 12px;
-  color: #666;
-}
-
-.pbc-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.assess-btn, .feedback-btn, .view-btn {
-  padding: 6px 12px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.assess-btn {
-  background-color: #f5f7fa;
-  color: #1890FF;
-}
-
-.feedback-btn {
-  background-color: #f5f7fa;
-  color: #52C41A;
-}
-
-.view-btn {
-  background-color: #f5f7fa;
-  color: #606266;
-}
-
-.assess-btn:hover, .feedback-btn:hover, .view-btn:hover {
-  background-color: #ecf5ff;
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
 }
 </style>

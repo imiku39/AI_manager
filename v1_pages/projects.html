@@ -335,11 +335,11 @@
           <button class="btn-chip"><span class="material-symbols-outlined">person_search</span>负责人</button>
           <button class="btn-chip"><span class="material-symbols-outlined">sell</span>标签</button>
           <button class="btn-chip"><span class="material-symbols-outlined">calendar_today</span>截止日期</button>
-          <button class="btn-chip" data-sort-health><span class="material-symbols-outlined">sort</span>权重排序</button>
+          <button class="btn-chip"><span class="material-symbols-outlined">sort</span>权重排序</button>
         </section>
 
-        <section style="display: flex; flex-direction: column; gap: 16px;" data-project-list>
-          <a class="glass-panel project-row" href="./project-overview.html" data-health="良好">
+        <section style="display: flex; flex-direction: column; gap: 16px;">
+          <a class="glass-panel project-row" href="./project-overview.html">
             <div class="project-meta">
               <div class="project-title-line">
                 <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-primary-600); display: inline-block;"></span>
@@ -372,7 +372,7 @@
             <span class="icon-btn"><span class="material-symbols-outlined">more_vert</span></span>
           </a>
 
-          <a class="glass-panel project-row" href="./project-overview.html" data-health="风险">
+          <a class="glass-panel project-row" href="./project-overview.html">
             <div class="project-meta">
               <div class="project-title-line">
                 <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-tertiary-600); display: inline-block;"></span>
@@ -405,7 +405,7 @@
             <span class="icon-btn"><span class="material-symbols-outlined">more_vert</span></span>
           </a>
 
-          <a class="glass-panel project-row" href="./project-overview.html" data-health="严重">
+          <a class="glass-panel project-row" href="./project-overview.html">
             <div class="project-meta">
               <div class="project-title-line">
                 <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-danger-600); display: inline-block;"></span>
@@ -438,7 +438,7 @@
             <span class="icon-btn"><span class="material-symbols-outlined">more_vert</span></span>
           </a>
 
-          <a class="glass-panel project-row" href="./project-overview.html" data-health="完成">
+          <a class="glass-panel project-row" href="./project-overview.html">
             <div class="project-meta">
               <div class="project-title-line">
                 <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-secondary-600); display: inline-block;"></span>
@@ -876,41 +876,6 @@
     </div>
   </aside>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const sortButton = document.querySelector("[data-sort-health]");
-      const projectList = document.querySelector("[data-project-list]");
-      if (!sortButton || !projectList) return;
-
-      const originalRows = Array.from(projectList.querySelectorAll(".project-row"));
-      const healthScoreMap = {
-        严重: 4,
-        风险: 3,
-        良好: 2,
-        完成: 1
-      };
-
-      let sortByHealth = false;
-
-      sortButton.addEventListener("click", () => {
-        sortByHealth = !sortByHealth;
-        sortButton.classList.toggle("active", sortByHealth);
-
-        if (!sortByHealth) {
-          originalRows.forEach((row) => projectList.appendChild(row));
-          return;
-        }
-
-        const sortedRows = [...originalRows].sort((a, b) => {
-          const scoreA = healthScoreMap[a.dataset.health] || 0;
-          const scoreB = healthScoreMap[b.dataset.health] || 0;
-          return scoreB - scoreA;
-        });
-
-        sortedRows.forEach((row) => projectList.appendChild(row));
-      });
-    });
-  </script>
   <script src="./shared.js"></script>
 </body>
 </html>

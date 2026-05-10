@@ -26,7 +26,24 @@
         <a class="nav-item" href="./dashboard.html"><span class="material-symbols-outlined">arrow_back</span><span>返回主系统</span></a>
       </div>
     </aside>
-    <header class="app-topbar"><div class="topbar-left"><div><h2 class="topbar-title">系统配置</h2><div class="topbar-breadcrumb"><span>后台管理</span><span>/</span><span>系统配置</span></div></div></div></header>
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <div>
+          <h2 class="topbar-title">系统配置</h2>
+          <div class="topbar-breadcrumb"><span>后台管理</span><span>/</span><span>系统配置</span></div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <label class="search-shell"><span class="material-symbols-outlined">search</span><input type="text" placeholder="搜索配置项、策略或通知通道..." /></label>
+        <a class="icon-btn notification-link" href="./notifications.html" aria-label="打开通知中心"><span class="material-symbols-outlined">notifications</span><span class="notification-badge">5</span></a>
+        <button class="icon-btn"><span class="material-symbols-outlined">apps</span></button>
+        <button class="icon-btn" data-ai-toggle><span class="material-symbols-outlined">auto_awesome</span></button>
+        <div class="avatar-chip">
+          <img src="https://i.pravatar.cc/80?img=5" alt="系统管理员" />
+          <div><strong>系统管理员</strong><span>平台角色：Admin</span></div>
+        </div>
+      </div>
+    </header>
     <main class="app-content">
       <div class="page-stack">
         <div class="page-header"><div><h1 class="page-title">系统配置</h1><p class="page-subtitle">系统全局配置页延续设置页模式，但信息更偏平台规则、通知通道和安全策略。</p></div><div class="page-actions"><button class="btn-secondary" onclick="resetToDefault()"><span class="material-symbols-outlined">restart_alt</span>恢复默认</button><button class="btn-primary" onclick="saveConfig()"><span class="material-symbols-outlined">save</span>保存配置</button></div></div>

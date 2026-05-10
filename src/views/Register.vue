@@ -1,142 +1,124 @@
 <template>
-  <div class="register-container">
-    <div class="register-form">
-      <h1>注册账号</h1>
-      <form @submit.prevent="handleRegister">
-        <div class="form-group">
-          <label for="name">姓名</label>
-          <input type="text" id="name" v-model="form.name" required>
-        </div>
-        <div class="form-group">
-          <label for="email">邮箱</label>
-          <input type="email" id="email" v-model="form.email" required>
-        </div>
-        <div class="form-group">
-          <label for="password">密码</label>
-          <input type="password" id="password" v-model="form.password" required>
-          <div class="password-strength">
-            密码强度：{{ passwordStrength }}
+  <div class="register-page">
+    <main class="auth-shell">
+      <section class="auth-card glass-panel-strong" style="width:min(720px,100%);">
+        <div class="auth-header">
+          <div class="auth-brand-mark">
+            <span class="material-symbols-outlined" style="font-size: 34px;">person_add</span>
           </div>
+          <h1 class="page-title" style="font-size: 28px; margin: 0;">创建协作账户</h1>
+          <p class="page-subtitle" style="margin: 0;">
+            延续登录页风格，注册后可进入项目、任务、报表与 AI 协作流程。
+          </p>
         </div>
-        <div class="form-group">
-          <label for="confirmPassword">确认密码</label>
-          <input type="password" id="confirmPassword" v-model="form.confirmPassword" required>
-        </div>
-        <div class="form-group">
-          <label for="inviteCode">邀请码（可选）</label>
-          <input type="text" id="inviteCode" v-model="form.inviteCode">
-        </div>
-        <button type="submit" class="register-btn">注册</button>
-      </form>
-      <div class="links">
-        <router-link to="/login">已有账号？去登录</router-link>
-      </div>
-    </div>
+
+        <form class="auth-form" @submit.prevent="handleSubmit">
+          <div class="field-inline">
+            <div class="field-stack">
+              <label class="field-label">账号</label>
+              <div class="field-input">
+                <span class="material-symbols-outlined">badge</span>
+                <input v-model="registerForm.account" type="text" placeholder="研发工号" />
+              </div>
+            </div>
+            <div class="field-stack">
+              <label class="field-label">姓名</label>
+              <div class="field-input">
+                <span class="material-symbols-outlined">person</span>
+                <input v-model="registerForm.name" type="text" placeholder="请输入姓名" />
+              </div>
+            </div>
+          </div>
+
+          <div class="field-inline">
+            <div class="field-stack">
+              <label class="field-label">邮箱</label>
+              <div class="field-input">
+                <span class="material-symbols-outlined">mail</span>
+                <input v-model="registerForm.email" type="email" placeholder="请输入邮箱" />
+              </div>
+            </div>
+            <div class="field-stack">
+              <label class="field-label">部门</label>
+              <div class="field-input">
+                <span class="material-symbols-outlined">apartment</span>
+                <input v-model="registerForm.department" type="text" placeholder="请输入部门" />
+              </div>
+            </div>
+          </div>
+
+          <div class="field-inline">
+            <div class="field-stack">
+              <label class="field-label">密码</label>
+              <div class="field-input">
+                <span class="material-symbols-outlined">lock</span>
+                <input v-model="registerForm.password" type="password" placeholder="设置密码" />
+              </div>
+            </div>
+            <div class="field-stack">
+              <label class="field-label">确认密码</label>
+              <div class="field-input">
+                <span class="material-symbols-outlined">verified_user</span>
+                <input v-model="registerForm.confirmPassword" type="password" placeholder="再次输入密码" />
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; gap:14px; align-items:center;">
+            <span class="section-caption">提交后由系统管理员审核并分配平台角色。</span>
+            <a href="#" style="color: var(--color-primary-700); font-weight: 600;" @click.prevent="router.push('/login')">
+              返回登录
+            </a>
+          </div>
+
+          <button class="btn-primary" type="submit" style="min-height:54px; font-size:18px;">
+            提交注册
+          </button>
+        </form>
+      </section>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { reactive } from "vue";
+import { useRouter } from "vue-router";
 
-const router = useRouter()
-const form = ref({
-  name: '',
-  email: '',
-  password: '',
-  confirmPassword: '',
-  inviteCode: ''
-})
+const router = useRouter();
 
-const passwordStrength = computed(() => {
-  const password = form.value.password
-  if (password.length < 6) return '弱'
-  if (password.length < 10) return '中'
-  return '强'
-})
+defineOptions({
+  name: "RegisterPage",
+});
 
-const handleRegister = () => {
-  // 模拟注册
+const registerForm = reactive({
+  account: "",
+  name: "",
+  email: "",
+  department: "",
+  password: "",
+  confirmPassword: "",
+});
+
+const handleSubmit = () => {
   router.push('/login')
-}
+};
 </script>
 
-<style scoped>
-.register-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #f5f5f5;
+<style>
+.register-page {
+  min-height: 100vh;
+  color: var(--color-text-primary);
+  font-family: "Inter", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(173, 198, 255, 0.34) 0, transparent 42%),
+    radial-gradient(circle at 100% 0%, rgba(236, 220, 255, 0.34) 0, transparent 42%),
+    radial-gradient(circle at 100% 100%, rgba(156, 239, 219, 0.22) 0, transparent 38%),
+    radial-gradient(circle at 0% 100%, rgba(20, 112, 232, 0.12) 0, transparent 38%),
+    #f7f8fc;
+  background-attachment: fixed;
 }
 
-.register-form {
-  width: 400px;
-  padding: 40px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #333;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #555;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.password-strength {
-  font-size: 12px;
-  margin-top: 5px;
-  color: #666;
-}
-
-.register-btn {
-  width: 100%;
-  padding: 12px;
-  background-color: #67c23a;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.register-btn:hover {
-  background-color: #85ce61;
-}
-
-.links {
-  text-align: center;
-  margin-top: 20px;
-  font-size: 14px;
-}
-
-.links a {
-  color: #409eff;
-  text-decoration: none;
-}
-
-.links a:hover {
-  text-decoration: underline;
+.register-page .auth-shell {
+  min-height: 100vh;
 }
 </style>

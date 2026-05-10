@@ -4,6 +4,10 @@
       <h1>项目模板管理</h1>
       <button class="create-btn">新建模板</button>
     </div>
+    <div class="header-actions">
+      <button class="secondary-btn" @click="router.push('/admin')">Back Admin</button>
+      <button class="secondary-btn" @click="router.push('/admin/roles')">Roles</button>
+    </div>
     <div class="templates-table">
       <table>
         <thead>
@@ -34,6 +38,9 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const templates = ref([
   {
@@ -77,6 +84,12 @@ const templates = ref([
   color: #333;
 }
 
+.header-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
 .create-btn {
   background-color: #409eff;
   color: white;
@@ -85,6 +98,21 @@ const templates = ref([
   border-radius: 4px;
   font-size: 14px;
   cursor: pointer;
+}
+
+.secondary-btn {
+  background-color: #f5f7fa;
+  color: #606266;
+  border: 1px solid #dcdfe6;
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.secondary-btn:hover {
+  background-color: #ecf5ff;
+  color: #409eff;
 }
 
 .create-btn:hover {

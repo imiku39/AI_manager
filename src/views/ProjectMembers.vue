@@ -1,631 +1,227 @@
-<template>
-  <div class="project-members">
-    <div class="members-header">
-      <h1>项目成员管理</h1>
-      <button class="invite-btn" @click="showOrgTree = true">邀请成员</button>
-    </div>
-    <div class="members-list">
-      <div class="member-card" v-for="member in members" :key="member.id">
-        <div class="member-avatar" :style="{ backgroundColor: member.avatarColor }">{{ member.name.charAt(0) }}</div>
-        <div class="member-info">
-          <h3>{{ member.name }}</h3>
-          <p>{{ member.email }}</p>
-          <div class="member-role">
-            <span class="role-tag">{{ getRoleName(member.role) }}</span>
-            <select class="role-select" v-model="member.role" @change="updateMemberRole(member.id, member.role)">
-              <option value="owner">负责人</option>
-              <option value="pm">项目经理</option>
-              <option value="developer">开发工程师</option>
-              <option value="qa">测试人员</option>
-              <option value="product">产品经理</option>
-              <option value="collaborator">协作者</option>
-            </select>
-          </div>
-          <div class="member-status" v-if="member.status === 'pending'">
-            <span class="status-tag pending">待接受</span>
-          </div>
-        </div>
-        <div class="member-actions">
-          <button class="remove-btn" @click="removeMember(member.id)">移除</button>
+﻿<template>
+  <div class="app-shell">
+    <aside class="app-sidebar">
+      <div class="brand-box">
+        <div class="brand-icon"><span class="material-symbols-outlined">science</span></div>
+        <div><h1 class="brand-title">R&D 系统</h1><p class="brand-subtitle">AI 驱动型协作平台</p></div>
+      </div>
+      <button class="sidebar-primary-cta" type="button"><span class="material-symbols-outlined">edit_square</span>编辑项目</button>
+      <nav class="sidebar-nav">
+        <router-link class="nav-item" to="/dashboard"><span class="material-symbols-outlined">dashboard</span><span>全局工作台</span></router-link>
+        <router-link class="nav-item active" to="/projects"><span class="material-symbols-outlined">account_tree</span><span>项目列表</span></router-link>
+        <router-link class="nav-item" to="/workbench"><span class="material-symbols-outlined">space_dashboard</span><span>个人工作台</span></router-link>
+        <router-link class="nav-item" to="/reports"><span class="material-symbols-outlined">query_stats</span><span>全局报表</span></router-link>
+        <router-link class="nav-item" to="/settings"><span class="material-symbols-outlined">settings</span><span>系统设置</span></router-link>
+        <router-link class="nav-item" to="/admin"><span class="material-symbols-outlined">admin_panel_settings</span><span>后台管理</span></router-link>
+      </nav>
+    </aside>
+
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button class="topbar-back-btn" type="button" @click="goBack"><span class="material-symbols-outlined">arrow_back_ios_new</span><span class="topbar-back-label">返回</span></button>
+        <div>
+          <h2 class="topbar-title">项目详情</h2>
+          <div class="topbar-breadcrumb"><span>项目</span><span>/</span><span>{{ project.name }}</span><span>/</span><span>{{ tabLabelMap[currentTab] }}</span></div>
         </div>
       </div>
-    </div>
-    <div class="load-heatmap">
-      <h2>成员负载热力图</h2>
-      <div class="heatmap-controls">
-        <select v-model="selectedMember" class="member-select">
-          <option value="">选择成员</option>
-          <option v-for="member in members" :key="member.id" :value="member.id">{{ member.name }}</option>
-        </select>
-        <select v-model="heatmapPeriod" class="period-select">
-          <option value="week">周视图</option>
-          <option value="month">月视图</option>
-        </select>
+      <div class="topbar-right">
+        <label class="search-shell"><span class="material-symbols-outlined">search</span><input type="text" placeholder="搜索任务、里程碑或成员..." /></label>
+        <button class="icon-btn notification-link" type="button"><span class="material-symbols-outlined">notifications</span><span class="notification-badge">5</span></button>
+        <UserProfileHoverCard :user="currentUser" />
       </div>
-      <div class="heatmap-container">
-        <div class="heatmap-grid">
-          <div class="heatmap-cell" v-for="i in 30" :key="i" :class="getHeatmapClass(i)" :title="getHeatmapTooltip(i)"></div>
-        </div>
-        <div class="heatmap-legend">
-          <div class="legend-item">
-            <span class="legend-color low"></span>
-            <span>低负载</span>
+    </header>
+
+    <main class="app-content">
+      <div class="page-stack">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">项目详情</h1>
+            <p class="page-subtitle">聚合项目状态、成员协作、任务流转、排期风险与报表数据，作为项目总工作区入口。</p>
           </div>
-          <div class="legend-item">
-            <span class="legend-color medium"></span>
-            <span>中等负载</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-color high"></span>
-            <span>高负载</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-color very-high"></span>
-            <span>极高负载</span>
+          <div class="page-actions">
+            <button class="btn-secondary"><span class="material-symbols-outlined">archive</span>归档项目</button>
+            <button class="btn-primary"><span class="material-symbols-outlined">track_changes</span>设置基线</button>
           </div>
         </div>
-      </div>
-    </div>
-    <!-- 组织架构树选择器 -->
-    <div class="org-tree-modal" v-if="showOrgTree">
-      <div class="modal-overlay" @click="showOrgTree = false"></div>
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>选择成员</h3>
-          <button class="close-btn" @click="showOrgTree = false">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="search-box">
-            <input type="text" v-model="orgSearch" placeholder="搜索成员...">
-          </div>
-          <div class="org-tree">
-            <div class="org-node" v-for="dept in orgTree" :key="dept.id">
-              <div class="org-node-header" @click="toggleDept(dept.id)">
-                <span class="org-node-icon">{{ dept.expanded ? '▼' : '▶' }}</span>
-                <span class="org-node-name">{{ dept.name }}</span>
-              </div>
-              <div class="org-node-children" v-if="dept.expanded">
-                <div class="org-member" v-for="member in dept.members" :key="member.id">
-                  <input type="checkbox" :id="'member-' + member.id" v-model="selectedMembers" :value="member">
-                  <label :for="'member-' + member.id">{{ member.name }} ({{ member.email }})</label>
-                </div>
-              </div>
+
+        <section class="summary-card glass-panel">
+          <div class="summary-content">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <span class="pill pill-success">进行中</span>
+              <span class="pill pill-ai">需求迭代模板</span>
             </div>
+            <h2 class="page-title" style="margin-top:18px;">{{ project.name }}</h2>
+            <p class="page-subtitle" style="max-width:880px;">{{ project.desc }}</p>
+            <div class="summary-kpis">
+              <div class="summary-kpi"><span>项目负责人</span><strong>{{ project.owner }}</strong></div>
+              <div class="summary-kpi"><span>时间范围</span><strong>{{ project.range }}</strong></div>
+              <div class="summary-kpi"><span>项目进度</span><strong>{{ project.progress }}%</strong></div>
+              <div class="summary-kpi"><span>健康度</span><strong style="color:var(--color-secondary-600);">{{ project.health }}</strong></div>
+              <div class="summary-kpi"><span>成员数</span><strong>{{ project.members }} 人</strong></div>
+            </div>
+            <!-- TODO(API): 项目基础信息需接项目详情查询接口 -->
           </div>
-        </div>
-        <div class="modal-footer">
-          <button class="cancel-btn" @click="showOrgTree = false">取消</button>
-          <button class="confirm-btn" @click="inviteSelectedMembers">邀请</button>
-        </div>
+        </section>
+
+        <nav class="subnav-bar glass-panel">
+          <router-link class="subnav-link" :class="{ active: currentTab === 'overview' }" :to="tabRoute('overview')">概览</router-link>
+          <router-link class="subnav-link" :class="{ active: currentTab === 'members' }" :to="tabRoute('members')">成员</router-link>
+          <router-link class="subnav-link" :class="{ active: currentTab === 'kanban' }" :to="tabRoute('kanban')">项目看板</router-link>
+          <router-link class="subnav-link" :class="{ active: currentTab === 'gantt' }" :to="tabRoute('gantt')">项目甘特图</router-link>
+          <router-link class="subnav-link" :class="{ active: currentTab === 'risk' }" :to="tabRoute('risk')">风险看板</router-link>
+          <router-link class="subnav-link" :class="{ active: currentTab === 'reports' }" :to="tabRoute('reports')">报表</router-link>
+          <router-link class="subnav-link" :class="{ active: currentTab === 'docs' }" :to="tabRoute('docs')">文档</router-link>
+        </nav>
+
+        <section v-if="currentTab === 'overview'" class="grid-2-1">
+          <div class="glass-panel" style="padding:24px;border-radius:24px;">
+            <h2 class="section-title">里程碑与进展摘要</h2>
+            <div class="timeline" style="margin-top:18px;">
+              <div class="timeline-item" v-for="item in milestones" :key="item.id"><span class="timeline-dot" :style="{ background: item.color }"></span><div class="timeline-body"><h4>{{ item.title }}</h4><p>{{ item.desc }}</p></div></div>
+            </div>
+            <!-- TODO(API): 概览里程碑与偏差预警需接项目分析接口 -->
+          </div>
+          <div style="display:flex;flex-direction:column;gap:24px;">
+            <div class="glass-panel" style="padding:24px;border-radius:24px;"><h2 class="section-title">基线偏差预警</h2><p class="page-subtitle" style="font-size:15px;margin-top:14px;">当前实际进度较最新基线落后 6%，里程碑“联调验证”偏差 2 天。</p></div>
+            <div class="glass-panel" style="padding:24px;border-radius:24px;background:linear-gradient(180deg, rgba(236,220,255,0.28), rgba(255,255,255,0.42));"><h2 class="section-title">AI 项目建议</h2><p class="page-subtitle" style="font-size:15px;margin-top:14px;">建议将“数据回灌校验”拆分为独立子任务，并从平台组借调 1 名 QA 参与联调。</p></div>
+          </div>
+        </section>
+
+        <section v-else-if="currentTab === 'members'" class="glass-panel" style="padding:24px;border-radius:24px;">
+          <h2 class="section-title">成员列表</h2>
+          <div class="member-table" style="margin-top:16px;">
+            <div class="member-row" v-for="member in memberRows" :key="member.id"><div class="member-ident"><img :src="member.avatar" :alt="member.name" /><div><strong>{{ member.name }}</strong><p class="muted">{{ member.role }}</p></div></div><div>{{ member.load }}</div><div>{{ member.dept }}</div><div>{{ member.focus }}</div><div>{{ member.status }}</div><span class="icon-btn"><span class="material-symbols-outlined">more_vert</span></span></div>
+          </div>
+          <!-- TODO(API): 成员邀请、角色调整、组织树检索、负载热力图需接成员与组织接口 -->
+        </section>
+
+        <section v-else-if="currentTab === 'kanban'" class="kanban">
+          <article class="kanban-column glass-panel" v-for="col in kanbanColumns" :key="col.id">
+            <div class="kanban-column-header"><h3>{{ col.name }}</h3><span class="section-caption">{{ col.tasks.length }}</span></div>
+            <div class="kanban-card" v-for="task in col.tasks" :key="task.id"><h4>{{ task.title }}</h4><p class="task-note">{{ task.owner }} · {{ task.deadline }}</p></div>
+          </article>
+          <!-- TODO(API): 看板列、任务卡片、拖拽状态流转需接任务看板接口 -->
+        </section>
+
+        <section v-else-if="currentTab === 'gantt'" class="glass-panel" style="padding:24px;border-radius:24px;">
+          <h2 class="section-title">项目甘特图</h2>
+          <div style="margin-top:16px;display:flex;flex-direction:column;gap:12px;">
+            <div v-for="item in ganttItems" :key="item.id" class="mini-bar-row"><span>{{ item.name }}</span><div class="progress-track"><div class="progress-fill" :style="{ width: `${item.progress}%` }"></div></div><strong>{{ item.progress }}%</strong></div>
+          </div>
+          <!-- TODO(API): 甘特任务排期、基线对比、关键路径需接排期接口 -->
+        </section>
+
+        <section v-else-if="currentTab === 'risk'" class="glass-panel" style="padding:24px;border-radius:24px;">
+          <h2 class="section-title">风险看板</h2>
+          <div class="admin-list" style="margin-top:16px;"><div class="admin-list-item" v-for="risk in risks" :key="risk.id"><div><strong>{{ risk.title }}</strong><span>{{ risk.owner }}</span></div><span class="status-tag" :class="risk.class">{{ risk.status }}</span></div></div>
+          <!-- TODO(API): 风险新增、状态流转、责任人分配、AI 根因分析需接风险管理接口 -->
+        </section>
+
+        <section v-else-if="currentTab === 'reports'" class="grid-2">
+          <article class="chart-card glass-panel"><h3>进度报表</h3><p class="page-subtitle" style="font-size:15px;margin-top:10px;">当前阶段完成率：72%，较上周 +5%。</p></article>
+          <article class="chart-card glass-panel"><h3>质量报表</h3><p class="page-subtitle" style="font-size:15px;margin-top:10px;">关键缺陷 3 个，已关闭 2 个。</p></article>
+          <!-- TODO(API): 报表筛选、趋势图、导出、订阅下发需接报表统计接口 -->
+        </section>
+
+        <section v-else class="doc-grid">
+          <article class="doc-card glass-panel" v-for="doc in docs" :key="doc.id"><h3 style="font-size:20px;">{{ doc.title }}</h3><p>{{ doc.desc }}</p></article>
+          <!-- TODO(API): 文档列表、版本记录、AI 摘要、新建与编辑动作需接文档中心接口 -->
+        </section>
       </div>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { projectMembers, orgTree as orgTreeData } from '../data/mockData.js'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import UserProfileHoverCard from '../components/topbar/UserProfileHoverCard.vue'
 
-// 项目成员列表
-const members = ref([...projectMembers])
+const route = useRoute()
+const router = useRouter()
+const currentTab = 'members'
 
-// 组织架构树
-const orgTree = ref([...orgTreeData])
-
-// 模态框状态
-const showOrgTree = ref(false)
-// 搜索关键词
-const orgSearch = ref('')
-// 选中的成员
-const selectedMembers = ref([])
-// 热力图相关
-const selectedMember = ref('')
-const heatmapPeriod = ref('month')
-
-// 获取角色名称
-const getRoleName = (role) => {
-  const roleMap = {
-    owner: '负责人',
-    pm: '项目经理',
-    developer: '开发工程师',
-    qa: '测试人员',
-    product: '产品经理',
-    collaborator: '协作者'
-  }
-  return roleMap[role] || role
+const currentUser = {
+  name: '王志强',
+  role: '项目负责人',
+  avatar: 'https://i.pravatar.cc/80?img=47'
 }
 
-// 切换部门展开/收起
-const toggleDept = (deptId) => {
-  const dept = orgTree.value.find(d => d.id === deptId)
-  if (dept) {
-    dept.expanded = !dept.expanded
-  }
+const project = ref({
+  name: '纳米晶体结构优化',
+  owner: '王志强',
+  desc: '聚焦晶体结构稳定性与模型预测精度提升，当前处于“联调验证”阶段。项目已建立最新计划基线，整体健康可控。',
+  range: '04/14 - 05/16',
+  progress: 72,
+  health: '良好',
+  members: 12
+})
+
+const tabLabelMap = {
+  overview: '概览',
+  members: '成员',
+  kanban: '项目看板',
+  gantt: '项目甘特图',
+  risk: '风险看板',
+  reports: '报表',
+  docs: '文档'
 }
 
-// 邀请选中的成员
-const inviteSelectedMembers = () => {
-  selectedMembers.value.forEach(member => {
-    // 检查成员是否已存在
-    const existingMember = members.value.find(m => m.id === member.id)
-    if (!existingMember) {
-      // 生成随机头像颜色
-      const colors = ['#409eff', '#67c23a', '#e6a23c', '#f56c6c', '#909399', '#722ed1']
-      const avatarColor = colors[Math.floor(Math.random() * colors.length)]
-      
-      // 添加新成员，状态为待接受
-      members.value.push({
-        id: member.id,
-        name: member.name,
-        email: member.email,
-        role: 'collaborator',
-        status: 'pending',
-        avatarColor
-      })
-    }
-  })
-  // 清空选择并关闭模态框
-  selectedMembers.value = []
-  showOrgTree.value = false
-}
+// TODO(API): 项目详情、成员、任务、风险、文档等应由后端聚合接口返回；当前为前端静态占位数据。
+const milestones = ref([
+  { id: 1, title: '需求评审', desc: '已完成。需求评审结论与实验约束已沉淀到项目文档。', color: 'var(--color-secondary-600)' },
+  { id: 2, title: '开发实现', desc: '已完成 90%，剩余性能对齐与异常样本校验。', color: 'var(--color-secondary-600)' },
+  { id: 3, title: '联调验证', desc: '相对基线延后 2 天。', color: 'var(--color-warning-600)' }
+])
 
-// 更新成员角色
-const updateMemberRole = (memberId, newRole) => {
-  const member = members.value.find(m => m.id === memberId)
-  if (member) {
-    member.role = newRole
-    // 这里可以添加API调用，更新后端数据
-    console.log(`更新成员 ${member.name} 的角色为 ${newRole}`)
-  }
-}
+const memberRows = ref([
+  { id: 1, name: '王志强', avatar: 'https://i.pravatar.cc/80?img=47', role: '项目负责人', load: '86%', dept: '平台组', focus: '联调推进', status: '在岗' },
+  { id: 2, name: '陈思远', avatar: 'https://i.pravatar.cc/80?img=22', role: '平台工程师', load: '74%', dept: '平台组', focus: '回灌链路', status: '在岗' },
+  { id: 3, name: '王雅婷', avatar: 'https://i.pravatar.cc/80?img=33', role: 'QA', load: '58%', dept: 'QA组', focus: '回归校验', status: '在岗' }
+])
 
-// 移除成员
-const removeMember = (memberId) => {
-  const index = members.value.findIndex(m => m.id === memberId)
-  if (index !== -1) {
-    // 这里可以添加API调用，更新后端数据
-    console.log(`移除成员 ${members.value[index].name}`)
-    members.value.splice(index, 1)
-  }
-}
+const kanbanColumns = ref([
+  { id: 'todo', name: '待开始', tasks: [{ id: 1, title: '联调环境参数回灌', owner: '王雅婷', deadline: '05-08' }] },
+  { id: 'doing', name: '进行中', tasks: [{ id: 2, title: '回归样本误差校验', owner: '陈思远', deadline: '05-09' }] },
+  { id: 'review', name: '待评审', tasks: [{ id: 3, title: '开发任务复盘', owner: '王志强', deadline: '05-10' }] },
+  { id: 'done', name: '已完成', tasks: [{ id: 4, title: '需求评审文档沉淀', owner: '王志强', deadline: '04-18' }] }
+])
 
-// 获取热力图单元格类
-const getHeatmapClass = (index) => {
-  const levels = ['low', 'medium', 'high', 'very-high']
-  return levels[Math.floor(Math.random() * levels.length)]
-}
+const ganttItems = ref([
+  { id: 1, name: '需求评审', progress: 100 },
+  { id: 2, name: '开发实现', progress: 90 },
+  { id: 3, name: '联调验证', progress: 66 }
+])
 
-// 获取热力图提示信息
-const getHeatmapTooltip = (index) => {
-  const date = new Date()
-  date.setDate(date.getDate() + index)
-  const dateStr = date.toLocaleDateString('zh-CN')
-  const loadLevel = getHeatmapClass(index)
-  const loadText = {
-    'low': '低负载',
-    'medium': '中等负载',
-    'high': '高负载',
-    'very-high': '极高负载'
-  }
-  return `${dateStr}: ${loadText[loadLevel]}`
+const risks = ref([
+  { id: 1, title: '联调窗口冲突', owner: '王志强', status: '处理中', class: 'warning' },
+  { id: 2, title: '测试环境冻结延迟', owner: '王雅婷', status: '待处理', class: 'danger' },
+  { id: 3, title: '回灌链路波动', owner: '陈思远', status: '已缓解', class: 'success' }
+])
+
+const docs = ref([
+  { id: 1, title: '需求评审纪要', desc: '记录需求边界、时间计划和依赖说明，供 PM、研发与 QA 对齐使用。' },
+  { id: 2, title: '联调验证说明', desc: '包含当前联调阶段的前置条件、关键风险和任务引用。' },
+  { id: 3, title: '回归样本池说明', desc: '当前文档为样式占位，可继续补充样本来源与版本关系。' }
+])
+
+const projectId = computed(() => route.params.id || 1)
+const tabRoute = (tab) => {
+  const id = projectId.value
+  if (tab === 'overview') return `/project/${id}`
+  return `/project/${id}/${tab}`
 }
+const goBack = () => router.push('/projects')
+
+// TODO(API): 成员邀请、角色调整、组织树检索、负载热力图需接成员与组织接口。
 </script>
 
 <style scoped>
-.project-members {
-  padding: 20px;
-}
-
-.members-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.members-header h1 {
-  font-size: 24px;
-  color: #333;
-}
-
-.invite-btn {
-  background-color: #409eff;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.invite-btn:hover {
-  background-color: #66b1ff;
-}
-
-.members-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
-}
-
-.member-card {
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.member-avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.member-info {
-  flex: 1;
-}
-
-.member-info h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 5px;
-}
-
-.member-info p {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 10px;
-}
-
-.member-role {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.role-tag {
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 500;
-  background-color: #f0f9eb;
-  color: #67c23a;
-}
-
-.role-select {
-  padding: 4px 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.member-status {
-  margin-top: 5px;
-}
-
-.status-tag {
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.status-tag.pending {
-  background-color: #fdf6ec;
-  color: #e6a23c;
-}
-
-.member-actions {
-  margin-left: 10px;
-}
-
-.remove-btn {
-  background-color: #fef0f0;
-  color: #f56c6c;
-  border: 1px solid #fbc4c4;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.remove-btn:hover {
-  background-color: #fde2e2;
-}
-
-.load-heatmap {
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.load-heatmap h2 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 20px;
-}
-
-.heatmap-controls {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.member-select,
-.period-select {
-  padding: 6px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.heatmap-container {
-  width: 100%;
-  overflow-x: auto;
-  margin-bottom: 20px;
-}
-
-.heatmap-grid {
-  display: grid;
-  grid-template-columns: repeat(30, 30px);
-  gap: 2px;
-}
-
-.heatmap-cell {
-  width: 30px;
-  height: 30px;
-  border-radius: 2px;
-  cursor: pointer;
-}
-
-.heatmap-cell:hover {
-  transform: scale(1.1);
-  transition: transform 0.2s;
-}
-
-.heatmap-cell.low {
-  background-color: #f0f9eb;
-}
-
-.heatmap-cell.medium {
-  background-color: #e6a23c;
-}
-
-.heatmap-cell.high {
-  background-color: #f56c6c;
-}
-
-.heatmap-cell.very-high {
-  background-color: #8a2be2;
-}
-
-.heatmap-legend {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  margin-top: 15px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: #666;
-}
-
-.legend-color {
-  width: 20px;
-  height: 20px;
-  border-radius: 2px;
-}
-
-.legend-color.low {
-  background-color: #f0f9eb;
-}
-
-.legend-color.medium {
-  background-color: #e6a23c;
-}
-
-.legend-color.high {
-  background-color: #f56c6c;
-}
-
-.legend-color.very-high {
-  background-color: #8a2be2;
-}
-
-/* 组织架构树模态框 */
-.org-tree-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.modal-content {
-  position: relative;
-  background-color: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #999;
-}
-
-.close-btn:hover {
-  color: #333;
-}
-
-.modal-body {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-.search-box {
-  margin-bottom: 20px;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.org-tree {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.org-node {
-  margin-bottom: 10px;
-}
-
-.org-node-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.org-node-header:hover {
-  background-color: #f5f7fa;
-}
-
-.org-node-icon {
-  font-size: 12px;
-  color: #999;
-  width: 16px;
-  text-align: center;
-}
-
-.org-node-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-}
-
-.org-node-children {
-  margin-left: 24px;
-  margin-top: 5px;
-}
-
-.org-member {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 4px;
-}
-
-.org-member:hover {
-  background-color: #f5f7fa;
-}
-
-.org-member input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-}
-
-.org-member label {
-  font-size: 14px;
-  color: #666;
-  cursor: pointer;
-  flex: 1;
-}
-
-.modal-footer {
-  padding: 20px;
-  border-top: 1px solid #eee;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.cancel-btn {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  background-color: white;
-  cursor: pointer;
-  color: #666;
-}
-
-.cancel-btn:hover {
-  background-color: #f5f7fa;
-}
-
-.confirm-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  background-color: #409eff;
-  color: white;
-  cursor: pointer;
-}
-
-.confirm-btn:hover {
-  background-color: #66b1ff;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;500;600&display=swap');
+@import '../styles/shared.css';
+
+.status-tag.warning { color: #a36b00; background: rgba(252,230,176,0.8); }
+.status-tag.danger { color: var(--color-danger-600); background: rgba(255,218,214,0.8); }
+.status-tag.success { color: var(--color-secondary-600); background: rgba(156,239,219,0.8); }
 </style>

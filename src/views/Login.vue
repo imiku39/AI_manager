@@ -1,139 +1,113 @@
 <template>
-  <div class="login-container">
-    <div class="login-form">
-      <h1>AI 项目管理系统</h1>
-      <form @submit.prevent="handleLogin">
-        <div class="form-group">
-          <label for="username">账号</label>
-          <input type="text" id="username" v-model="form.username" required>
+  <div class="login-page">
+    <main class="auth-shell">
+      <section class="auth-card glass-panel-strong">
+        <div class="auth-header">
+          <div class="auth-brand-mark">
+            <span class="material-symbols-outlined" style="font-size: 34px;">science</span>
+          </div>
+          <h1 class="page-title" style="font-size: 28px; margin: 0;">Ethereal Lab</h1>
+          <p class="page-subtitle" style="margin: 0;">
+            欢迎回来，请登录你的 AI 驱动型研发协作账户。
+          </p>
         </div>
-        <div class="form-group">
-          <label for="password">密码</label>
-          <input type="password" id="password" v-model="form.password" required>
+
+        <form class="auth-form" @submit.prevent="handleSubmit">
+          <div class="field-stack">
+            <label class="field-label">用户名</label>
+            <div class="field-input">
+              <span class="material-symbols-outlined">person</span>
+              <input v-model="loginForm.username" type="text" placeholder="请输入研发工号" />
+            </div>
+          </div>
+
+          <div class="field-stack">
+            <label class="field-label">密码</label>
+            <div class="field-input">
+              <span class="material-symbols-outlined">lock</span>
+              <input v-model="loginForm.password" type="password" placeholder="请输入安全密码" />
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; color: var(--color-text-secondary); font-size: 13px;">
+            <label style="display:flex; gap:8px; align-items:center;">
+              <input v-model="loginForm.rememberMe" type="checkbox" />
+              记住我
+            </label>
+            <a href="#" style="color: var(--color-primary-700); font-weight: 600;" @click.prevent="router.push('/register')">
+              还没有账户？去注册
+            </a>
+          </div>
+
+          <button class="btn-primary" type="submit" style="min-height: 54px; font-size: 18px;">
+            立即登录
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </form>
+
+        <div style="display:flex; align-items:center; gap:16px; color: var(--color-text-tertiary); font-size: 12px;">
+          <div style="height:1px; flex:1; background: rgba(216,221,232,0.9);"></div>
+          <span>第三方接入</span>
+          <div style="height:1px; flex:1; background: rgba(216,221,232,0.9);"></div>
         </div>
-        <button type="submit" class="login-btn">登录</button>
-      </form>
-      <div class="third-party-login">
-        <button class="third-party-btn">企微扫码登录</button>
-        <button class="third-party-btn">钉钉扫码登录</button>
-      </div>
-      <div class="links">
-        <router-link to="/register">没有账号？去注册</router-link>
-        <a href="#">忘记密码？</a>
-      </div>
-    </div>
+
+        <div style="display:flex; justify-content:center; gap:16px;">
+          <button class="icon-btn glass-soft" type="button" @click="handleSocialLogin('fingerprint')">
+            <span class="material-symbols-outlined">fingerprint</span>
+          </button>
+          <button class="icon-btn glass-soft" type="button" @click="handleSocialLogin('qr_code_scanner')">
+            <span class="material-symbols-outlined">qr_code_scanner</span>
+          </button>
+        </div>
+
+        <p class="section-caption" style="text-align:center; margin: 0;"> 2026 Ethereal Lab 研发管理系统</p>
+      </section>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { reactive } from "vue";
+import { useRouter } from "vue-router";
 
-const router = useRouter()
-const form = ref({
-  username: '',
-  password: ''
-})
+const router = useRouter();
 
-const handleLogin = () => {
-  // 模拟登录
+defineOptions({
+  name: "LoginPage",
+});
+
+const loginForm = reactive({
+  username: "",
+  password: "",
+  rememberMe: false,
+});
+
+const handleSubmit = () => {
   localStorage.setItem('token', 'mock-token')
   localStorage.setItem('userRole', 'super_admin')
   router.push('/dashboard')
-}
+};
+
+const handleSocialLogin = (provider) => {
+  console.log('social login:', provider)
+};
 </script>
 
-<style scoped>
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #f5f5f5;
+<style>
+.login-page {
+  min-height: 100vh;
+  color: var(--color-text-primary);
+  font-family: "Inter", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(173, 198, 255, 0.34) 0, transparent 42%),
+    radial-gradient(circle at 100% 0%, rgba(236, 220, 255, 0.34) 0, transparent 42%),
+    radial-gradient(circle at 100% 100%, rgba(156, 239, 219, 0.22) 0, transparent 38%),
+    radial-gradient(circle at 0% 100%, rgba(20, 112, 232, 0.12) 0, transparent 38%),
+    #f7f8fc;
+  background-attachment: fixed;
 }
 
-.login-form {
-  width: 400px;
-  padding: 40px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #333;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #555;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.login-btn {
-  width: 100%;
-  padding: 12px;
-  background-color: #409eff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.login-btn:hover {
-  background-color: #66b1ff;
-}
-
-.third-party-login {
-  margin: 20px 0;
-  display: flex;
-  gap: 10px;
-}
-
-.third-party-btn {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: white;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.third-party-btn:hover {
-  background-color: #f5f5f5;
-}
-
-.links {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-  font-size: 14px;
-}
-
-.links a {
-  color: #409eff;
-  text-decoration: none;
-}
-
-.links a:hover {
-  text-decoration: underline;
+.login-page .auth-shell {
+  min-height: 100vh;
 }
 </style>

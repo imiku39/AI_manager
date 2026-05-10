@@ -139,7 +139,7 @@ import UserProfileHoverCard from '../components/topbar/UserProfileHoverCard.vue'
 
 const route = useRoute()
 const router = useRouter()
-const currentTab = 'docs'
+const currentTab = 'reports'
 
 const currentUser = {
   name: '王志强',
@@ -213,7 +213,7 @@ const tabRoute = (tab) => {
 }
 const goBack = () => router.push('/projects')
 
-// TODO(API): 文档列表、版本记录、AI 摘要、新建与编辑动作需接文档中心接口。
+// TODO(API): 报表筛选、趋势图、导出、订阅下发需接报表统计接口。
 </script>
 
 <style scoped>

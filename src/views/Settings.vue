@@ -1,859 +1,393 @@
 <template>
-  <div class="settings">
-    <div class="settings-header">
-      <h1>系统设置</h1>
+  <!-- 来源页面：settings.html -->
+  <div class="settings-page">
+    <div class="app-shell">
+      <aside class="app-sidebar">
+        <div class="brand-box">
+          <div class="brand-icon">
+            <span class="material-symbols-outlined">science</span>
+          </div>
+          <div>
+            <h1 class="brand-title">R&D 系统</h1>
+            <p class="brand-subtitle">AI 驱动型协作平台</p>
+          </div>
+        </div>
+
+        <!-- TODO: 对接保存设置接口 -->
+        <button class="sidebar-primary-cta" type="button" @click="handleSaveSettings">
+          <span class="material-symbols-outlined">save</span>
+          保存设置
+        </button>
+
+        <!-- TODO: 接入 Vue Router 后统一替换为 RouterLink 或 router.push -->
+        <nav class="sidebar-nav">
+          <a class="nav-item" href="#" @click.prevent="handleNavigate('/dashboard')">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span>全局工作台</span>
+          </a>
+          <a class="nav-item" href="#" @click.prevent="handleNavigate('/projects')">
+            <span class="material-symbols-outlined">account_tree</span>
+            <span>项目列表</span>
+          </a>
+          <a class="nav-item" href="#" @click.prevent="handleNavigate('/workbench')">
+            <span class="material-symbols-outlined">space_dashboard</span>
+            <span>个人工作台</span>
+          </a>
+          <a class="nav-item" href="#" @click.prevent="handleNavigate('/reports')">
+            <span class="material-symbols-outlined">query_stats</span>
+            <span>全局报表</span>
+          </a>
+          <a class="nav-item active" href="#" @click.prevent="handleNavigate('/settings')">
+            <span class="material-symbols-outlined">settings</span>
+            <span>系统设置</span>
+          </a>
+          <a class="nav-item" href="#" @click.prevent="handleNavigate('/admin')">
+            <span class="material-symbols-outlined">admin_panel_settings</span>
+            <span>后台管理</span>
+          </a>
+        </nav>
+      </aside>
+
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <div>
+            <h2 class="topbar-title">系统设置</h2>
+            <div class="topbar-breadcrumb">
+              <span>个人</span>
+              <span>/</span>
+              <span>设置</span>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <!-- TODO: 对接设置项搜索 -->
+          <label class="search-shell">
+            <span class="material-symbols-outlined">search</span>
+            <input
+              v-model="keyword"
+              type="text"
+              placeholder="搜索设置项、通知或安全策略..."
+            />
+          </label>
+          <!-- TODO: 对接通知中心路由或通知抽屉 -->
+          <a
+            class="icon-btn notification-link"
+            href="#"
+            aria-label="打开通知中心"
+            @click.prevent="handleOpenNotifications"
+          >
+            <span class="material-symbols-outlined">notifications</span>
+            <span class="notification-badge">5</span>
+          </a>
+          <!-- TODO: 对接应用切换器 -->
+          <button class="icon-btn" type="button" @click="handleOpenAppSwitcher">
+            <span class="material-symbols-outlined">apps</span>
+          </button>
+          <!-- TODO: 对接全局 AI 助手抽屉 -->
+          <button class="icon-btn" type="button" data-ai-toggle @click="openAiDrawer">
+            <span class="material-symbols-outlined">auto_awesome</span>
+          </button>
+          <!-- TODO: 对接当前登录用户信息 -->
+          <UserProfileHoverCard :user="currentUser" />
+        </div>
+      </header>
+
+      <main class="app-content">
+        <div class="page-stack">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">系统设置</h1>
+              <p class="page-subtitle">
+                采用分组设置卡组织个人资料、通知偏好与账户安全，装饰最少，以表单清晰为主。
+              </p>
+            </div>
+            <div class="page-actions">
+              <!-- TODO: 对接恢复默认设置接口 -->
+              <button class="btn-secondary" type="button" @click="handleResetSettings">恢复默认</button>
+              <!-- TODO: 对接保存设置接口 -->
+              <button class="btn-primary" type="button" @click="handleSaveSettings">保存修改</button>
+            </div>
+          </div>
+
+          <section class="settings-layout">
+            <aside class="settings-nav glass-panel">
+              <a class="subnav-link active" href="#" @click.prevent>个人资料</a>
+              <a class="subnav-link" href="#" @click.prevent>通知偏好</a>
+              <a class="subnav-link" href="#" @click.prevent>账户安全</a>
+              <a class="subnav-link" href="#" @click.prevent>AI 偏好</a>
+            </aside>
+
+            <div class="settings-panel">
+              <article class="settings-card glass-panel">
+                <div class="settings-card-head">
+                  <h2 class="section-title">个人资料</h2>
+                  <span class="section-caption">修改基础信息</span>
+                </div>
+                <div class="field-inline">
+                  <div class="field-stack">
+                    <label class="field-label">姓名</label>
+                    <div class="field-input">
+                      <input v-model="profileForm.name" />
+                    </div>
+                  </div>
+                  <div class="field-stack">
+                    <label class="field-label">部门</label>
+                    <div class="field-input">
+                      <input v-model="profileForm.department" />
+                    </div>
+                  </div>
+                </div>
+                <div class="field-inline" style="margin-top: 16px;">
+                  <div class="field-stack">
+                    <label class="field-label">邮箱</label>
+                    <div class="field-input">
+                      <input v-model="profileForm.email" />
+                    </div>
+                  </div>
+                  <div class="field-stack">
+                    <label class="field-label">手机号</label>
+                    <div class="field-input">
+                      <input v-model="profileForm.phone" />
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="settings-card glass-panel">
+                <div class="settings-card-head">
+                  <h2 class="section-title">通知偏好</h2>
+                  <span class="section-caption">站内 / 邮件 / 企微</span>
+                </div>
+                <div class="settings-list">
+                  <div class="settings-row">
+                    <div>
+                      <strong>任务状态变更</strong>
+                      <span>任务完成、阻塞、待评审时提醒我</span>
+                    </div>
+                    <button
+                      class="toggle"
+                      :class="{ on: notificationPrefs.taskStatus }"
+                      type="button"
+                      :aria-pressed="notificationPrefs.taskStatus ? 'true' : 'false'"
+                      @click="togglePref('taskStatus')"
+                    ></button>
+                  </div>
+                  <div class="settings-row">
+                    <div>
+                      <strong>日志互动</strong>
+                      <span>有人评论或点赞日志时提醒我</span>
+                    </div>
+                    <button
+                      class="toggle"
+                      :class="{ on: notificationPrefs.logFeedback }"
+                      type="button"
+                      :aria-pressed="notificationPrefs.logFeedback ? 'true' : 'false'"
+                      @click="togglePref('logFeedback')"
+                    ></button>
+                  </div>
+                  <div class="settings-row">
+                    <div>
+                      <strong>报表订阅</strong>
+                      <span>接收定时周报和项目报表</span>
+                    </div>
+                    <button
+                      class="toggle"
+                      :class="{ on: notificationPrefs.reportSubscription }"
+                      type="button"
+                      :aria-pressed="notificationPrefs.reportSubscription ? 'true' : 'false'"
+                      @click="togglePref('reportSubscription')"
+                    ></button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="settings-card glass-panel">
+                <div class="settings-card-head">
+                  <h2 class="section-title">账户安全</h2>
+                  <span class="section-caption">密码与会话管理</span>
+                </div>
+                <div class="settings-list">
+                  <div class="settings-row">
+                    <div>
+                      <strong>修改密码</strong>
+                      <span>上次修改时间：2026-03-12</span>
+                    </div>
+                    <!-- TODO: 对接修改密码流程 -->
+                    <button class="btn-chip active" type="button" @click="handleSecurityAction('password')">操作</button>
+                  </div>
+                  <div class="settings-row">
+                    <div>
+                      <strong>设备会话</strong>
+                      <span>当前有 3 个登录设备</span>
+                    </div>
+                    <!-- TODO: 对接设备会话管理流程 -->
+                    <button class="btn-chip" type="button" @click="handleSecurityAction('session')">查看</button>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+      </main>
     </div>
-    <div class="settings-content">
-      <div class="settings-section section-profile">
-        <h2>个人资料</h2>
-        <div class="profile-form">
-          <div class="profile-content">
-            <div class="avatar-section">
-              <div class="avatar-upload">
-                <div class="avatar-preview" :style="{ backgroundColor: avatarColor }">{{ userName.charAt(0) }}</div>
-                <input type="file" class="avatar-input">
-                <button class="upload-btn">更换头像</button>
-                <div class="avatar-meta">
-                  <strong>{{ userName }}</strong>
-                  <span>个人资料与账号入口</span>
-                </div>
-              </div>
-            </div>
-            <div class="profile-divider" aria-hidden="true"></div>
-            <div class="info-section">
-              <div class="section-intro">
-                <h3>基础信息</h3>
-                <p>维护你的公开资料与联系邮箱，便于系统展示与通知送达。</p>
-              </div>
-              <div class="profile-fields">
-                <div class="form-group">
-                  <label>姓名</label>
-                  <input type="text" v-model="userName">
-                </div>
-                <div class="form-group">
-                  <label>邮箱</label>
-                  <input type="email" v-model="userEmail">
-                </div>
-              </div>
-              <div class="info-actions">
-                <button class="save-btn">保存修改</button>
-              </div>
-            </div>
-          </div>
+
+    <button class="floating-ai-btn" type="button" data-ai-toggle @click="openAiDrawer">
+      <span class="material-symbols-outlined">auto_awesome</span>
+    </button>
+    <div class="ai-overlay" :class="{ open: isAiDrawerOpen }" data-ai-overlay @click="closeAiDrawer"></div>
+    <aside class="ai-drawer" :class="{ open: isAiDrawerOpen }" data-ai-drawer>
+      <div class="ai-header">
+        <div>
+          <h3>AI 助手</h3>
+          <p class="section-caption">当前上下文：系统设置</p>
+        </div>
+        <button class="icon-btn" type="button" data-ai-close @click="closeAiDrawer">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="ai-card">
+        <h4>偏好建议</h4>
+        <p>你当前同时开启了任务和日志通知，建议保留站内提醒并关闭邮件提醒，减少高频干扰。</p>
+        <div class="ai-actions">
+          <!-- TODO: 对接 AI 偏好建议采纳流程 -->
+          <button class="btn-primary" type="button" @click="handleAcceptAiSuggestion">采纳建议</button>
         </div>
       </div>
-      <div class="settings-section section-actions">
-        <h2>快捷设置</h2>
-        <div class="actions-panel">
-          <div class="section-intro">
-            <h3>账号与偏好</h3>
-            <p>将安全设置、通知配置和主题切换集中放在右侧，操作路径更直接。</p>
-          </div>
-          <button type="button" class="action-trigger-btn password-trigger-btn" @click="openPasswordModal">修改密码</button>
-          <button type="button" class="action-trigger-btn notification-trigger-btn" @click="openNotificationModal">通知设置</button>
-          <button type="button" class="action-trigger-btn theme-trigger-btn" @click="openThemeModal">主题设置</button>
-        </div>
-      </div>
-    </div>
-    <transition name="settings-modal">
-      <div v-if="showPasswordModal" class="settings-modal-overlay" @click.self="closePasswordModal">
-        <div class="settings-modal-panel">
-          <div class="settings-modal-header">
-            <div>
-              <h3>修改密码</h3>
-              <p>请输入当前密码并设置新的登录密码。</p>
-            </div>
-            <button type="button" class="modal-close-btn" @click="closePasswordModal">×</button>
-          </div>
-          <div class="password-form modal-password-form">
-            <div class="form-group">
-              <label>旧密码</label>
-              <input type="password" v-model="oldPassword" placeholder="请输入当前密码">
-            </div>
-            <div class="form-group">
-              <label>新密码</label>
-              <input type="password" v-model="newPassword" placeholder="请输入新密码">
-            </div>
-            <div class="form-group">
-              <label>确认新密码</label>
-              <input type="password" v-model="confirmPassword" placeholder="请再次输入新密码">
-            </div>
-          </div>
-          <div class="settings-modal-actions">
-            <button type="button" class="secondary-btn" @click="closePasswordModal">取消</button>
-            <button type="button" class="save-btn" :disabled="!canSubmitPassword" @click="submitPasswordChange">确认修改</button>
-          </div>
-        </div>
-      </div>
-    </transition>
-    <transition name="settings-modal">
-      <div v-if="showNotificationModal" class="settings-modal-overlay" @click.self="closeNotificationModal">
-        <div class="settings-modal-panel">
-          <div class="settings-modal-header">
-            <div>
-              <h3>通知偏好</h3>
-              <p>选择需要接收的通知事件，以及对应的推送渠道。</p>
-            </div>
-            <button type="button" class="modal-close-btn" @click="closeNotificationModal">×</button>
-          </div>
-          <div class="notification-settings modal-notification-settings">
-            <div class="notification-item">
-              <label>
-                <input type="checkbox" v-model="notifications.taskAssign">
-                任务分配通知
-              </label>
-              <div class="notification-channels">
-                <label>
-                  <input type="checkbox" v-model="notificationChannels.taskAssign.site">
-                  站内通知
-                </label>
-                <label>
-                  <input type="checkbox" v-model="notificationChannels.taskAssign.wechat">
-                  企微通知
-                </label>
-                <label>
-                  <input type="checkbox" v-model="notificationChannels.taskAssign.dingtalk">
-                  钉钉通知
-                </label>
-              </div>
-            </div>
-            <div class="notification-item">
-              <label>
-                <input type="checkbox" v-model="notifications.taskStatus">
-                任务状态变更通知
-              </label>
-              <div class="notification-channels">
-                <label>
-                  <input type="checkbox" v-model="notificationChannels.taskStatus.site">
-                  站内通知
-                </label>
-                <label>
-                  <input type="checkbox" v-model="notificationChannels.taskStatus.wechat">
-                  企微通知
-                </label>
-                <label>
-                  <input type="checkbox" v-model="notificationChannels.taskStatus.dingtalk">
-                  钉钉通知
-                </label>
-              </div>
-            </div>
-            <div class="notification-item">
-              <label>
-                <input type="checkbox" v-model="notifications.projectUpdate">
-                项目更新通知
-              </label>
-              <div class="notification-channels">
-                <label>
-                  <input type="checkbox" v-model="notificationChannels.projectUpdate.site">
-                  站内通知
-                </label>
-                <label>
-                  <input type="checkbox" v-model="notificationChannels.projectUpdate.wechat">
-                  企微通知
-                </label>
-                <label>
-                  <input type="checkbox" v-model="notificationChannels.projectUpdate.dingtalk">
-                  钉钉通知
-                </label>
-              </div>
-            </div>
-          </div>
-          <div class="settings-modal-actions">
-            <button type="button" class="secondary-btn" @click="closeNotificationModal">取消</button>
-            <button type="button" class="save-btn" @click="submitNotificationSettings">保存设置</button>
-          </div>
-        </div>
-      </div>
-    </transition>
-    <transition name="settings-modal">
-      <div v-if="showThemeModal" class="settings-modal-overlay" @click.self="closeThemeModal">
-        <div class="settings-modal-panel">
-          <div class="settings-modal-header">
-            <div>
-              <h3>主题设置</h3>
-              <p>选择当前界面的视觉模式，后续可接入全局主题切换。</p>
-            </div>
-            <button type="button" class="modal-close-btn" @click="closeThemeModal">×</button>
-          </div>
-          <div class="theme-settings modal-theme-settings">
-            <label class="theme-choice-card" :class="{ active: theme === 'light' }">
-              <input type="radio" name="theme" value="light" v-model="theme">
-              <span class="theme-choice-title">亮色模式</span>
-              <span class="theme-choice-desc">适合日间办公与信息密集场景。</span>
-            </label>
-            <label class="theme-choice-card" :class="{ active: theme === 'dark' }">
-              <input type="radio" name="theme" value="dark" v-model="theme">
-              <span class="theme-choice-title">暗色模式</span>
-              <span class="theme-choice-desc">减弱高亮刺激，适合夜间浏览。</span>
-            </label>
-          </div>
-          <div class="settings-modal-actions">
-            <button type="button" class="secondary-btn" @click="closeThemeModal">取消</button>
-            <button type="button" class="save-btn" @click="submitThemeSettings">保存主题</button>
-          </div>
-        </div>
-      </div>
-    </transition>
+    </aside>
   </div>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import { pushAppPath } from "../utils/navigation";
+import UserProfileHoverCard from "../components/topbar/UserProfileHoverCard.vue";
 
-const userName = ref('张三')
-const userEmail = ref('zhangsan@example.com')
-const avatarColor = ref('#409eff')
+const router = useRouter();
 
-const oldPassword = ref('')
-const newPassword = ref('')
-const confirmPassword = ref('')
-const showPasswordModal = ref(false)
-const showNotificationModal = ref(false)
-const showThemeModal = ref(false)
+defineOptions({
+  name: "SettingsPage",
+});
 
-const theme = ref('light')
+const emit = defineEmits([
+  "navigate",
+  "open-notifications",
+  "open-app-switcher",
+  "open-ai-drawer",
+  "save-settings",
+  "reset-settings",
+  "security-action",
+  "accept-ai-suggestion",
+]);
 
-const notifications = ref({
-  taskAssign: true,
+const keyword = ref("");
+const isAiDrawerOpen = ref(false);
+
+const currentUser = {
+  name: "张工",
+  role: "研发总监",
+  avatar: "https://i.pravatar.cc/80?img=12",
+};
+
+const defaultProfileForm = {
+  name: "张工",
+  department: "研发中心",
+  email: "zhang@example.com",
+  phone: "138****7788",
+};
+
+const defaultNotificationPrefs = {
   taskStatus: true,
-  projectUpdate: true
-})
+  logFeedback: true,
+  reportSubscription: false,
+};
 
-const notificationChannels = ref({
-  taskAssign: {
-    site: true,
-    wechat: false,
-    dingtalk: false
-  },
-  taskStatus: {
-    site: true,
-    wechat: false,
-    dingtalk: false
-  },
-  projectUpdate: {
-    site: true,
-    wechat: false,
-    dingtalk: false
+const profileForm = reactive({ ...defaultProfileForm });
+const notificationPrefs = reactive({ ...defaultNotificationPrefs });
+
+const buildSettingsPayload = () => ({
+  profile: { ...profileForm },
+  notifications: { ...notificationPrefs },
+});
+
+const handleNavigate = (path) => {
+  pushAppPath(router, path);
+};
+
+const handleOpenNotifications = () => {
+  emit("open-notifications");
+  pushAppPath(router, "/notifications");
+};
+
+const handleOpenAppSwitcher = () => {
+  emit("open-app-switcher");
+};
+
+const openAiDrawer = () => {
+  isAiDrawerOpen.value = true;
+  emit("open-ai-drawer");
+};
+
+const closeAiDrawer = () => {
+  isAiDrawerOpen.value = false;
+};
+
+const togglePref = (key) => {
+  notificationPrefs[key] = !notificationPrefs[key];
+};
+
+// TODO: Connect the save settings API.
+const handleSaveSettings = () => {
+  emit("save-settings", buildSettingsPayload());
+};
+
+// TODO: Connect the reset settings API.
+const handleResetSettings = () => {
+  Object.assign(profileForm, defaultProfileForm);
+  Object.assign(notificationPrefs, defaultNotificationPrefs);
+  emit("reset-settings", buildSettingsPayload());
+};
+
+const handleSecurityAction = (action) => {
+  emit("security-action", action);
+};
+
+// TODO: Connect the AI preference suggestion workflow.
+const handleAcceptAiSuggestion = () => {
+  emit("accept-ai-suggestion");
+};
+
+const handleKeydown = (event) => {
+  if (event.key === "Escape") {
+    closeAiDrawer();
   }
-})
-
-const canSubmitPassword = computed(() => {
-  return Boolean(
-    oldPassword.value &&
-    newPassword.value &&
-    confirmPassword.value &&
-    newPassword.value === confirmPassword.value
-  )
-})
-
-const resetPasswordForm = () => {
-  oldPassword.value = ''
-  newPassword.value = ''
-  confirmPassword.value = ''
-}
-
-const openPasswordModal = () => {
-  showPasswordModal.value = true
-}
-
-const closePasswordModal = () => {
-  showPasswordModal.value = false
-  resetPasswordForm()
-}
-
-const submitPasswordChange = () => {
-  if (!canSubmitPassword.value) return
-  closePasswordModal()
-}
-
-const openNotificationModal = () => {
-  showNotificationModal.value = true
-}
-
-const closeNotificationModal = () => {
-  showNotificationModal.value = false
-}
-
-const submitNotificationSettings = () => {
-  closeNotificationModal()
-}
-
-const openThemeModal = () => {
-  showThemeModal.value = true
-}
-
-const closeThemeModal = () => {
-  showThemeModal.value = false
-}
-
-const submitThemeSettings = () => {
-  closeThemeModal()
-}
-
-const settingsPageClass = 'settings-page-content'
+};
 
 onMounted(() => {
-  document.querySelector('.page-content')?.classList.add(settingsPageClass)
-})
+  window.addEventListener("keydown", handleKeydown);
+});
 
 onBeforeUnmount(() => {
-  document.querySelector('.page-content')?.classList.remove(settingsPageClass)
-})
+  window.removeEventListener("keydown", handleKeydown);
+});
 </script>
 
-<style scoped>
-:global(.settings-page-content) {
-  overflow: hidden;
-}
-
-.settings {
-  height: 100%;
-  padding: 20px 24px 24px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.settings-header {
-  margin-bottom: 20px;
-  flex-shrink: 0;
-}
-
-.settings-header h1 {
-  margin: 0;
-  font-size: 24px;
-  color: #333;
-  line-height: 1.2;
-}
-
-.settings-content {
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  max-width: none;
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) 420px;
-  grid-template-areas: "profile actions";
-  gap: 24px;
-  align-items: stretch;
-}
-
-.settings-section {
-  background-color: white;
-  border-radius: 8px;
-  padding: 18px 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 0;
-  min-width: 0;
-  height: 100%;
-  overflow: hidden;
-}
-
-.section-profile {
-  grid-area: profile;
-}
-
-.section-actions {
-  grid-area: actions;
-}
-
-.settings-section h2 {
-  margin: 0 0 18px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #606266;
-  margin-bottom: 8px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.avatar-upload {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-}
-
-.avatar-preview {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 32px;
-  font-weight: 600;
-}
-
-.avatar-input {
-  display: none;
-}
-
-.upload-btn {
-  background-color: #f5f7fa;
-  color: #409eff;
-  border: 1px solid #dcdfe6;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.upload-btn:hover {
-  background-color: #ecf5ff;
-}
-
-.profile-form {
-  height: calc(100% - 52px);
-}
-
-.profile-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 8px 0 10px;
-  height: 100%;
-}
-
-.avatar-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 20px 26px;
-}
-
-.avatar-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  text-align: center;
-}
-
-.avatar-meta strong {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.avatar-meta span {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.profile-divider {
-  height: 1px;
-  margin: 0 18px;
-  background: linear-gradient(90deg, transparent 0%, #e6edf7 12%, #e6edf7 88%, transparent 100%);
-}
-
-.info-section {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  min-width: 0;
-  width: 100%;
-  max-width: 100%;
-  padding: 24px 20px 8px;
-}
-
-.section-intro {
-  margin-bottom: 18px;
-}
-
-.section-intro h3 {
-  margin: 0 0 6px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.section-intro p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #6b7280;
-}
-
-.profile-fields {
-  display: grid;
-  gap: 14px;
-}
-
-.info-section .form-group {
-  max-width: 100%;
-  margin-bottom: 0;
-}
-
-.info-actions {
-  margin-top: 18px;
-}
-
-/* 个人资料卡片输入框样式 */
-.profile-form .info-section input {
-  width: 100%;
-}
-
-.actions-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  width: 100%;
-  max-width: 100%;
-  justify-content: flex-start;
-  min-height: calc(100% - 52px);
-  padding-top: 8px;
-}
-
-.section-actions .section-intro {
-  margin-bottom: 4px;
-}
-
-.save-btn {
-  background-color: #409eff;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.save-btn:hover {
-  background-color: #66b1ff;
-}
-
-.save-btn:disabled {
-  background-color: #b7d7fb;
-  cursor: not-allowed;
-}
-
-.action-trigger-btn {
-  width: 100%;
-  padding: 16px 28px;
-  border: 1px solid #d8e3ef;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #f6f9fc 100%);
-  color: #334155;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
-}
-
-.action-trigger-btn:hover {
-  transform: translateY(-2px);
-  border-color: #c4d4e5;
-  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
-}
-
-.action-trigger-btn:active {
-  transform: translateY(1px) scale(0.98);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
-}
-
-.notification-item {
-  margin-bottom: 20px;
-}
-
-.notification-item label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #606266;
-  margin-bottom: 10px;
-}
-
-.notification-channels {
-  margin-left: 0;
-  padding-left: 20px;
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.notification-channels label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 0;
-}
-
-.theme-settings {
-  margin-left: 0;
-}
-
-.password-form,
-.notification-settings,
-.theme-settings {
-  width: 100%;
-}
-
-.settings-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(15, 23, 42, 0.38);
-  backdrop-filter: blur(4px);
-}
-
-.settings-modal-panel {
-  width: min(560px, 100%);
-  max-height: calc(100vh - 72px);
-  overflow-y: auto;
-  background: white;
-  border-radius: 20px;
-  padding: 28px;
-  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.22);
-}
-
-.settings-modal-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.settings-modal-header h3 {
-  margin: 0 0 8px;
-  font-size: 24px;
-  color: #1f2937;
-}
-
-.settings-modal-header p {
-  margin: 0;
-  font-size: 14px;
-  color: #6b7280;
-  line-height: 1.6;
-}
-
-.modal-close-btn {
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 999px;
-  background: #f3f6fb;
-  color: #4b5563;
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-  transition: background-color 0.18s ease, transform 0.18s ease, color 0.18s ease;
-}
-
-.modal-close-btn:hover {
-  background: #e8eef8;
-  color: #111827;
-  transform: rotate(90deg);
-}
-
-.modal-close-btn:active {
-  transform: rotate(90deg) scale(0.95);
-}
-
-.modal-password-form {
-  margin-bottom: 24px;
-}
-
-.modal-notification-settings {
-  margin-bottom: 24px;
-}
-
-.modal-theme-settings {
-  display: grid;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.settings-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.secondary-btn {
-  padding: 10px 18px;
-  border: 1px solid #dbe3ef;
-  border-radius: 10px;
-  background: #f8fafc;
-  color: #475569;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
-}
-
-.secondary-btn:hover {
-  background: #eff4fa;
-  border-color: #c9d7ea;
-}
-
-.secondary-btn:active {
-  transform: scale(0.98);
-}
-
-.theme-choice-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 20px 20px 20px 52px;
-  border: 1px solid #dbe3ef;
-  border-radius: 16px;
-  background: #f8fafc;
-  cursor: pointer;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
-}
-
-.theme-choice-card input {
-  position: absolute;
-  top: 22px;
-  left: 20px;
-}
-
-.theme-choice-card:hover {
-  transform: translateY(-1px);
-  border-color: #9bc2f8;
-  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.1);
-}
-
-.theme-choice-card.active {
-  border-color: #409eff;
-  background: #eff6ff;
-  box-shadow: 0 14px 30px rgba(64, 158, 255, 0.12);
-}
-
-.theme-choice-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.theme-choice-desc {
-  font-size: 13px;
-  line-height: 1.6;
-  color: #6b7280;
-}
-
-.settings-modal-enter-active,
-.settings-modal-leave-active {
-  transition: opacity 0.24s ease;
-}
-
-.settings-modal-enter-active .settings-modal-panel,
-.settings-modal-leave-active .settings-modal-panel {
-  transition: transform 0.28s ease, opacity 0.28s ease;
-}
-
-.settings-modal-enter-from,
-.settings-modal-leave-to {
-  opacity: 0;
-}
-
-.settings-modal-enter-from .settings-modal-panel,
-.settings-modal-leave-to .settings-modal-panel {
-  transform: translateY(18px) scale(0.97);
-  opacity: 0;
-}
-
-@media (max-width: 1200px) {
-  .settings-content {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "profile"
-      "actions";
-  }
-
-  .profile-content {
-    height: auto;
-  }
-
-  .actions-panel {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: stretch;
-    min-height: auto;
-  }
-
-  .section-actions .section-intro {
-    width: 100%;
-  }
-
-  .actions-panel .action-trigger-btn {
-    flex: 1 1 180px;
-  }
-}
-
-@media (max-width: 768px) {
-  .settings {
-    padding: 16px;
-  }
-
-  .settings-section {
-    padding: 18px;
-  }
-
-  .profile-content {
-    gap: 24px;
-    height: auto;
-  }
-
-  .avatar-section {
-    align-items: center;
-  }
-
-  .actions-panel {
-    flex-direction: column;
-    min-height: auto;
-  }
-
-  .settings-modal-overlay {
-    padding: 16px;
-  }
-
-  .settings-modal-panel {
-    padding: 22px;
-    border-radius: 16px;
-  }
-
-  .settings-modal-actions {
-    flex-direction: column-reverse;
-  }
-
-  .settings-modal-actions .save-btn,
-  .settings-modal-actions .secondary-btn,
-  .action-trigger-btn {
-    width: 100%;
-  }
+<style>
+
+.settings-page {
+  min-height: 100vh;
+  color: var(--color-text-primary);
+  font-family: "Inter", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(173, 198, 255, 0.34) 0, transparent 42%),
+    radial-gradient(circle at 100% 0%, rgba(236, 220, 255, 0.34) 0, transparent 42%),
+    radial-gradient(circle at 100% 100%, rgba(156, 239, 219, 0.22) 0, transparent 38%),
+    radial-gradient(circle at 0% 100%, rgba(20, 112, 232, 0.12) 0, transparent 38%),
+    #f7f8fc;
+  background-attachment: fixed;
+}
+
+.settings-page .app-shell {
+  min-height: 100vh;
 }
 </style>
