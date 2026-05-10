@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="app-shell">
     <aside class="app-sidebar">
       <div class="brand-box">
@@ -68,144 +68,47 @@
         <section class="glass-panel filter-bar">
           <label class="search-shell" style="margin-right: auto;">
             <span class="material-symbols-outlined">search</span>
-            <input type="text" placeholder="按项目名称或关键字筛选..." />
+            <input type="text" placeholder="按项目名称或负责人筛选..." v-model="searchKeyword" />
           </label>
           <button class="btn-chip active"><span class="material-symbols-outlined">tune</span>全部状态</button>
-          <button class="btn-chip"><span class="material-symbols-outlined">person_search</span>负责人</button>
-          <button class="btn-chip"><span class="material-symbols-outlined">sell</span>标签</button>
-          <button class="btn-chip"><span class="material-symbols-outlined">calendar_today</span>截止日期</button>
+          <button class="btn-chip" :class="{ active: sortField === 'owner' }" @click="sortByOwner"><span class="material-symbols-outlined">person_search</span>负责人 <span v-if="sortField === 'owner'">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span></button>
+          <button class="btn-chip" :class="{ active: sortField === 'health' }" @click="sortByHealth"><span class="material-symbols-outlined">sell</span>标签 <span v-if="sortField === 'health'">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span></button>
+          <button class="btn-chip" :class="{ active: sortField === 'deadline' }" @click="sortByDeadline"><span class="material-symbols-outlined">calendar_today</span>截止日期 <span v-if="sortField === 'deadline'">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span></button>
           <button class="btn-chip"><span class="material-symbols-outlined">sort</span>权重排序</button>
         </section>
 
         <section style="display: flex; flex-direction: column; gap: 16px;">
-          <a class="glass-panel project-row" href="#" @click.prevent="handleNavigate('/project/1')">
+          <a v-for="project in sortedProjects" :key="project.id" class="glass-panel project-row" href="#" @click.prevent="handleNavigate(`/project/${project.id}`)">
             <div class="project-meta">
               <div class="project-title-line">
-                <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-primary-600); display: inline-block;"></span>
-                <h3>纳米晶体结构优化</h3>
+                <span style="width: 10px; height: 10px; border-radius: 50%; display: inline-block;" :style="{ background: project.color }"></span>
+                <h3>{{ project.name }}</h3>
               </div>
-              <p>材料科学部 · 项目编号：RD-2026-089 · 标签：结构迭代 / AI 预测</p>
+              <p>{{ project.department }} · 项目编号：{{ project.code }} · 标签：{{ project.tags.join(' / ') }}</p>
             </div>
             <div>
               <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                 <span class="section-caption">完成度</span>
-                <strong style="color: var(--color-primary-700);">72%</strong>
+                <strong :style="{ color: project.color }">{{ project.progress }}%</strong>
               </div>
-              <div class="progress-track"><div class="progress-fill" style="width: 72%; background: linear-gradient(90deg, var(--color-primary-400), var(--color-primary-700));"></div></div>
+              <div class="progress-track">
+                <div class="progress-fill" :style="{ width: project.progress + '%', background: `linear-gradient(90deg, ${project.color}, ${project.color})` }"></div>
+              </div>
             </div>
             <div>
-              <span class="status-tag success">健康度：良好</span>
-              <p class="task-note" style="margin-top: 8px;">状态：进行中</p>
+              <span class="status-tag" :class="getHealthClass(project.health)">健康度：{{ project.health }}</span>
+              <p class="task-note" style="margin-top: 8px;">状态：{{ project.status }}</p>
             </div>
             <div class="member-chip">
-              <img src="https://i.pravatar.cc/80?img=47" alt="王志强" />
+              <img :src="project.owner.avatar" :alt="project.owner.name" />
               <div>
-                <strong>王志强</strong>
+                <strong>{{ project.owner.name }}</strong>
                 <span class="section-caption">负责人</span>
               </div>
             </div>
             <div>
-              <strong>2026-05-16</strong>
-              <p class="task-note" style="margin-top: 6px;">成员数：12</p>
-            </div>
-            <span class="icon-btn"><span class="material-symbols-outlined">more_vert</span></span>
-          </a>
-
-          <a class="glass-panel project-row" href="#" @click.prevent="handleNavigate('/project/1')">
-            <div class="project-meta">
-              <div class="project-title-line">
-                <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-tertiary-600); display: inline-block;"></span>
-                <h3>深度学习实验室自动化</h3>
-              </div>
-              <p>计算物理组 · 项目编号：RD-2026-112 · 标签：平台改造 / 自动化</p>
-            </div>
-            <div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                <span class="section-caption">完成度</span>
-                <strong style="color: var(--color-tertiary-600);">45%</strong>
-              </div>
-              <div class="progress-track"><div class="progress-fill" style="width: 45%; background: linear-gradient(90deg, #a871ff, var(--color-tertiary-600));"></div></div>
-            </div>
-            <div>
-              <span class="status-tag warning">健康度：风险</span>
-              <p class="task-note" style="margin-top: 8px;">状态：进行中</p>
-            </div>
-            <div class="member-chip">
-              <img src="https://i.pravatar.cc/80?img=22" alt="陈思远" />
-              <div>
-                <strong>陈思远</strong>
-                <span class="section-caption">负责人</span>
-              </div>
-            </div>
-            <div>
-              <strong>2026-05-30</strong>
-              <p class="task-note" style="margin-top: 6px;">成员数：9</p>
-            </div>
-            <span class="icon-btn"><span class="material-symbols-outlined">more_vert</span></span>
-          </a>
-
-          <a class="glass-panel project-row" href="#" @click.prevent="handleNavigate('/project/1')">
-            <div class="project-meta">
-              <div class="project-title-line">
-                <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-danger-600); display: inline-block;"></span>
-                <h3>量子纠缠通信协议 V2</h3>
-              </div>
-              <p>前沿实验室 · 项目编号：RD-2025-456 · 标签：协议升级 / 高风险</p>
-            </div>
-            <div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                <span class="section-caption">完成度</span>
-                <strong style="color: var(--color-danger-600);">15%</strong>
-              </div>
-              <div class="progress-track"><div class="progress-fill" style="width: 15%; background: linear-gradient(90deg, #f36b63, var(--color-danger-600));"></div></div>
-            </div>
-            <div>
-              <span class="status-tag danger">健康度：严重</span>
-              <p class="task-note" style="margin-top: 8px;">状态：已暂停</p>
-            </div>
-            <div class="member-chip">
-              <img src="https://i.pravatar.cc/80?img=11" alt="林博士" />
-              <div>
-                <strong>林博士</strong>
-                <span class="section-caption">负责人</span>
-              </div>
-            </div>
-            <div>
-              <strong>2026-06-08</strong>
-              <p class="task-note" style="margin-top: 6px;">成员数：7</p>
-            </div>
-            <span class="icon-btn"><span class="material-symbols-outlined">more_vert</span></span>
-          </a>
-
-          <a class="glass-panel project-row" href="#" @click.prevent="handleNavigate('/project/1')">
-            <div class="project-meta">
-              <div class="project-title-line">
-                <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-secondary-600); display: inline-block;"></span>
-                <h3>生物聚合材料耐久性测试</h3>
-              </div>
-              <p>生物工程组 · 项目编号：RD-2026-201 · 标签：性能验证 / 已交付</p>
-            </div>
-            <div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                <span class="section-caption">完成度</span>
-                <strong style="color: var(--color-secondary-600);">100%</strong>
-              </div>
-              <div class="progress-track"><div class="progress-fill" style="width: 100%; background: linear-gradient(90deg, #38c59b, var(--color-secondary-600));"></div></div>
-            </div>
-            <div>
-              <span class="status-tag success">健康度：完成</span>
-              <p class="task-note" style="margin-top: 8px;">状态：已归档</p>
-            </div>
-            <div class="member-chip">
-              <img src="https://i.pravatar.cc/80?img=35" alt="周雅楠" />
-              <div>
-                <strong>周雅楠</strong>
-                <span class="section-caption">负责人</span>
-              </div>
-            </div>
-            <div>
-              <strong>2026-04-18</strong>
-              <p class="task-note" style="margin-top: 6px;">成员数：5</p>
+              <strong>{{ project.deadline }}</strong>
+              <p class="task-note" style="margin-top: 6px;">成员数：{{ project.memberCount }}</p>
             </div>
             <span class="icon-btn"><span class="material-symbols-outlined">more_vert</span></span>
           </a>
@@ -629,12 +532,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { pushAppPath } from '../utils/navigation'
 import UserProfileHoverCard from '../components/topbar/UserProfileHoverCard.vue'
 
 const router = useRouter()
+
 const currentUser = {
   name: '张工',
   role: '研发总监',
@@ -645,8 +548,169 @@ const isModalOpen = ref(false)
 const isAiDrawerOpen = ref(false)
 const toast = ref({ show: false, title: '', message: '', icon: '' })
 
+// 项目数据
+const projects = ref([
+  {
+    id: 1,
+    name: '纳米晶体结构优化',
+    department: '材料科学部',
+    code: 'RD-2026-089',
+    tags: ['结构迭代', 'AI 预测'],
+    progress: 72,
+    health: '良好',
+    status: '进行中',
+    owner: { name: '王志强', avatar: 'https://i.pravatar.cc/80?img=47' },
+    deadline: '2026-05-16',
+    memberCount: 12,
+    color: 'var(--color-primary-600)'
+  },
+  {
+    id: 2,
+    name: '深度学习实验室自动化',
+    department: '计算物理组',
+    code: 'RD-2026-112',
+    tags: ['平台改造', '自动化'],
+    progress: 45,
+    health: '风险',
+    status: '进行中',
+    owner: { name: '陈思远', avatar: 'https://i.pravatar.cc/80?img=22' },
+    deadline: '2026-05-30',
+    memberCount: 9,
+    color: 'var(--color-tertiary-600)'
+  },
+  {
+    id: 3,
+    name: '量子纠缠通信协议 V2',
+    department: '前沿实验室',
+    code: 'RD-2025-456',
+    tags: ['协议升级', '高风险'],
+    progress: 15,
+    health: '严重',
+    status: '已暂停',
+    owner: { name: '林博士', avatar: 'https://i.pravatar.cc/80?img=11' },
+    deadline: '2026-06-08',
+    memberCount: 7,
+    color: 'var(--color-danger-600)'
+  },
+  {
+    id: 4,
+    name: '生物聚合材料耐久性测试',
+    department: '生物工程组',
+    code: 'RD-2026-201',
+    tags: ['性能验证', '已交付'],
+    progress: 100,
+    health: '完成',
+    status: '已归档',
+    owner: { name: '周雅楠', avatar: 'https://i.pravatar.cc/80?img=35' },
+    deadline: '2026-04-18',
+    memberCount: 5,
+    color: 'var(--color-secondary-600)'
+  }
+])
+
+// 搜索关键词
+const searchKeyword = ref('')
+
+// 排序状态
+const sortField = ref('')
+const sortOrder = ref('asc') // 'asc' | 'desc'
+
+// 健康度优先级映射（由高到低）
+const healthPriority = {
+  '完成': 4,
+  '良好': 3,
+  '风险': 2,
+  '严重': 1
+}
+
+// 搜索并排序后的项目列表
+const sortedProjects = computed(() => {
+  let list = [...projects.value]
+  
+  // 先过滤：按项目名称和负责人名字搜索
+  if (searchKeyword.value.trim()) {
+    const keyword = searchKeyword.value.toLowerCase().trim()
+    list = list.filter(project => {
+      const projectName = project.name.toLowerCase()
+      const ownerName = project.owner.name.toLowerCase()
+      return projectName.includes(keyword) || ownerName.includes(keyword)
+    })
+  }
+  
+  // 再排序
+  if (sortField.value === 'deadline') {
+    list.sort((a, b) => {
+      const dateA = new Date(a.deadline).getTime()
+      const dateB = new Date(b.deadline).getTime()
+      return sortOrder.value === 'asc' ? dateA - dateB : dateB - dateA
+    })
+  } else if (sortField.value === 'health') {
+    list.sort((a, b) => {
+      const priorityA = healthPriority[a.health] || 0
+      const priorityB = healthPriority[b.health] || 0
+      return sortOrder.value === 'asc' ? priorityB - priorityA : priorityA - priorityB
+    })
+  } else if (sortField.value === 'owner') {
+    list.sort((a, b) => {
+      const nameA = a.owner.name
+      const nameB = b.owner.name
+      const compare = nameA.localeCompare(nameB, 'zh-CN')
+      return sortOrder.value === 'asc' ? compare : -compare
+    })
+  }
+  
+  return list
+})
+
+// 按截止日期排序
+const sortByDeadline = () => {
+  if (sortField.value === 'deadline') {
+    // 切换排序方向
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    // 设置为按截止日期升序（从近到远）
+    sortField.value = 'deadline'
+    sortOrder.value = 'asc'
+  }
+}
+
+// 按健康度排序（由高到低）
+const sortByHealth = () => {
+  if (sortField.value === 'health') {
+    // 切换排序方向
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    // 设置为按健康度升序（由高到低）
+    sortField.value = 'health'
+    sortOrder.value = 'asc'
+  }
+}
+
+// 按负责人名字首字母排序
+const sortByOwner = () => {
+  if (sortField.value === 'owner') {
+    // 切换排序方向
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    // 设置为按负责人升序（首字母从小到大）
+    sortField.value = 'owner'
+    sortOrder.value = 'asc'
+  }
+}
+
+// 获取健康度对应的标签类名
+const getHealthClass = (health) => {
+  const classMap = {
+    '良好': 'success',
+    '风险': 'warning',
+    '严重': 'danger',
+    '完成': 'success'
+  }
+  return classMap[health] || 'neutral'
+}
+
 const handleNavigate = (path) => {
-  pushAppPath(router, path)
+  router.push(path)
 }
 
 const openModal = () => {

@@ -63,20 +63,16 @@
         </div>
         <div class="header-right">
           <button class="header-btn notification-btn" :class="{ active: showNotification }" @click="toggleNotification">🔔 <span class="badge">3</span></button>
-          <div class="user-info">
-            <div class="user-avatar">张</div>
-            <span class="user-name">张三</span>
-            <select v-model="currentRole" @change="setRole(currentRole)" class="role-select">
-              <option value="super_admin">超级管理员</option>
-              <option value="admin">系统管理员</option>
-              <option value="pm">项目经理</option>
-              <option value="developer">开发工程师</option>
-              <option value="qa">测试人员</option>
-              <option value="product">产品经理</option>
-              <option value="collaborator">协作者</option>
-            </select>
-          </div>
-          <button class="logout-btn" @click="handleLogout">退出</button>
+          <UserProfileHoverCard :user="currentUser" />
+          <select v-model="currentRole" @change="setRole(currentRole)" class="role-select">
+            <option value="super_admin">超级管理员</option>
+            <option value="admin">系统管理员</option>
+            <option value="pm">项目经理</option>
+            <option value="developer">开发工程师</option>
+            <option value="qa">测试人员</option>
+            <option value="product">产品经理</option>
+            <option value="collaborator">协作者</option>
+          </select>
         </div>
       </header>
       <main class="page-content">
@@ -105,11 +101,18 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AIAssistant from '../components/ai/AIAssistant.vue'
+import UserProfileHoverCard from '../components/topbar/UserProfileHoverCard.vue'
 import usePermission from '../composables/usePermission'
 
 const router = useRouter()
 const route = useRoute()
 const { currentRole, setRole, hasPermission, isAnyRole } = usePermission()
+
+const currentUser = {
+  name: '张三',
+  role: '超级管理员',
+  avatar: ''
+}
 
 const showNotification = ref(false)
 const notifications = ref([

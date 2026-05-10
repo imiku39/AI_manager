@@ -87,7 +87,6 @@
           <button class="icon-btn" type="button" data-ai-toggle @click="openAiDrawer">
             <span class="material-symbols-outlined">auto_awesome</span>
           </button>
-          <!-- TODO: 对接当前登录用户信息 -->
           <UserProfileHoverCard :user="currentUser" />
         </div>
       </header>
@@ -111,14 +110,15 @@
 
           <section class="settings-layout">
             <aside class="settings-nav glass-panel">
-              <a class="subnav-link active" href="#" @click.prevent>个人资料</a>
-              <a class="subnav-link" href="#" @click.prevent>通知偏好</a>
-              <a class="subnav-link" href="#" @click.prevent>账户安全</a>
-              <a class="subnav-link" href="#" @click.prevent>AI 偏好</a>
+              <a class="subnav-link" :class="{ active: activeTab === 'profile' }" href="#" @click.prevent="activeTab = 'profile'">个人资料</a>
+              <a class="subnav-link" :class="{ active: activeTab === 'notification' }" href="#" @click.prevent="activeTab = 'notification'">通知偏好</a>
+              <a class="subnav-link" :class="{ active: activeTab === 'security' }" href="#" @click.prevent="activeTab = 'security'">账户安全</a>
+              <a class="subnav-link" :class="{ active: activeTab === 'ai' }" href="#" @click.prevent="activeTab = 'ai'">AI 偏好</a>
             </aside>
 
             <div class="settings-panel">
-              <article class="settings-card glass-panel">
+              <!-- 个人资料 -->
+              <article v-show="activeTab === 'profile'" class="settings-card glass-panel">
                 <div class="settings-card-head">
                   <h2 class="section-title">个人资料</h2>
                   <span class="section-caption">修改基础信息</span>
@@ -153,7 +153,8 @@
                 </div>
               </article>
 
-              <article class="settings-card glass-panel">
+              <!-- 通知偏好 -->
+              <article v-show="activeTab === 'notification'" class="settings-card glass-panel">
                 <div class="settings-card-head">
                   <h2 class="section-title">通知偏好</h2>
                   <span class="section-caption">站内 / 邮件 / 企微</span>
@@ -201,7 +202,8 @@
                 </div>
               </article>
 
-              <article class="settings-card glass-panel">
+              <!-- 账户安全 -->
+              <article v-show="activeTab === 'security'" class="settings-card glass-panel">
                 <div class="settings-card-head">
                   <h2 class="section-title">账户安全</h2>
                   <span class="section-caption">密码与会话管理</span>
@@ -225,6 +227,55 @@
                   </div>
                 </div>
               </article>
+
+              <!-- AI 偏好 -->
+              <article v-show="activeTab === 'ai'" class="settings-card glass-panel">
+                <div class="settings-card-head">
+                  <h2 class="section-title">AI 偏好</h2>
+                  <span class="section-caption">智能助手设置</span>
+                </div>
+                <div class="settings-list">
+                  <div class="settings-row">
+                    <div>
+                      <strong>AI 助手自动总结</strong>
+                      <span>每日自动总结项目进展和待办事项</span>
+                    </div>
+                    <button
+                      class="toggle"
+                      :class="{ on: aiPrefs.autoSummary }"
+                      type="button"
+                      :aria-pressed="aiPrefs.autoSummary ? 'true' : 'false'"
+                      @click="toggleAiPref('autoSummary')"
+                    ></button>
+                  </div>
+                  <div class="settings-row">
+                    <div>
+                      <strong>智能排期建议</strong>
+                      <span>AI 根据项目状态提供优化建议</span>
+                    </div>
+                    <button
+                      class="toggle"
+                      :class="{ on: aiPrefs.scheduling }"
+                      type="button"
+                      :aria-pressed="aiPrefs.scheduling ? 'true' : 'false'"
+                      @click="toggleAiPref('scheduling')"
+                    ></button>
+                  </div>
+                  <div class="settings-row">
+                    <div>
+                      <strong>风险预警</strong>
+                      <span>自动识别项目风险并预警</span>
+                    </div>
+                    <button
+                      class="toggle"
+                      :class="{ on: aiPrefs.riskAlert }"
+                      type="button"
+                      :aria-pressed="aiPrefs.riskAlert ? 'true' : 'false'"
+                      @click="toggleAiPref('riskAlert')"
+                    ></button>
+                  </div>
+                </div>
+              </article>
             </div>
           </section>
         </div>
@@ -234,6 +285,17 @@
     <button class="floating-ai-btn" type="button" data-ai-toggle @click="openAiDrawer">
       <span class="material-symbols-outlined">auto_awesome</span>
     </button>
+
+    <!-- Toast 提示 -->
+    <div v-if="showToast" class="toast-stack">
+      <div class="toast-card">
+        <span class="material-symbols-outlined">check_circle</span>
+        <div class="toast-body">
+          <strong>操作成功</strong>
+          <span>{{ toastMessage }}</span>
+        </div>
+      </div>
+    </div>
     <div class="ai-overlay" :class="{ open: isAiDrawerOpen }" data-ai-overlay @click="closeAiDrawer"></div>
     <aside class="ai-drawer" :class="{ open: isAiDrawerOpen }" data-ai-drawer>
       <div class="ai-header">
@@ -260,7 +322,6 @@
 <script setup>
 import { onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
-import { pushAppPath } from "../utils/navigation";
 import UserProfileHoverCard from "../components/topbar/UserProfileHoverCard.vue";
 
 const router = useRouter();
@@ -282,6 +343,9 @@ const emit = defineEmits([
 
 const keyword = ref("");
 const isAiDrawerOpen = ref(false);
+const activeTab = ref("profile"); // profile, notification, security, ai
+const toastMessage = ref("");
+const showToast = ref(false);
 
 const currentUser = {
   name: "张工",
@@ -302,21 +366,43 @@ const defaultNotificationPrefs = {
   reportSubscription: false,
 };
 
-const profileForm = reactive({ ...defaultProfileForm });
-const notificationPrefs = reactive({ ...defaultNotificationPrefs });
+const defaultAiPrefs = {
+  autoSummary: true,
+  scheduling: true,
+  riskAlert: false,
+};
+
+// 从 localStorage 加载保存的设置，若无则使用默认值
+const loadSettings = () => {
+  const savedSettings = localStorage.getItem('app-settings');
+  if (savedSettings) {
+    try {
+      return JSON.parse(savedSettings);
+    } catch (e) {
+      console.error('Failed to parse saved settings:', e);
+    }
+  }
+  return null;
+};
+
+const savedSettings = loadSettings();
+
+const profileForm = reactive(savedSettings?.profile ? { ...savedSettings.profile } : { ...defaultProfileForm });
+const notificationPrefs = reactive(savedSettings?.notifications ? { ...savedSettings.notifications } : { ...defaultNotificationPrefs });
+const aiPrefs = reactive(savedSettings?.aiPrefs ? { ...savedSettings.aiPrefs } : { ...defaultAiPrefs });
 
 const buildSettingsPayload = () => ({
   profile: { ...profileForm },
   notifications: { ...notificationPrefs },
+  aiPrefs: { ...aiPrefs },
 });
 
 const handleNavigate = (path) => {
-  pushAppPath(router, path);
+  router.push(path);
 };
 
 const handleOpenNotifications = () => {
   emit("open-notifications");
-  pushAppPath(router, "/notifications");
 };
 
 const handleOpenAppSwitcher = () => {
@@ -332,20 +418,45 @@ const closeAiDrawer = () => {
   isAiDrawerOpen.value = false;
 };
 
+const showToastMessage = (message) => {
+  toastMessage.value = message;
+  showToast.value = true;
+  setTimeout(() => {
+    showToast.value = false;
+  }, 2500);
+};
+
 const togglePref = (key) => {
   notificationPrefs[key] = !notificationPrefs[key];
 };
 
+const toggleAiPref = (key) => {
+  aiPrefs[key] = !aiPrefs[key];
+};
+
 // TODO: Connect the save settings API.
 const handleSaveSettings = () => {
-  emit("save-settings", buildSettingsPayload());
+  const payload = buildSettingsPayload();
+  // 保存到 localStorage
+  localStorage.setItem('app-settings', JSON.stringify(payload));
+  emit("save-settings", payload);
+  showToastMessage("设置已保存");
 };
 
 // TODO: Connect the reset settings API.
 const handleResetSettings = () => {
   Object.assign(profileForm, defaultProfileForm);
-  Object.assign(notificationPrefs, defaultNotificationPrefs);
+  // 将所有通知偏好设置为关闭（变暗）
+  notificationPrefs.taskStatus = false;
+  notificationPrefs.logFeedback = false;
+  notificationPrefs.reportSubscription = false;
+  // 将所有 AI 偏好设置为关闭（变暗）
+  aiPrefs.autoSummary = false;
+  aiPrefs.scheduling = false;
+  aiPrefs.riskAlert = false;
+  // 自动保存
   emit("reset-settings", buildSettingsPayload());
+  handleSaveSettings();
 };
 
 const handleSecurityAction = (action) => {

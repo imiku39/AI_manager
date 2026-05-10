@@ -148,93 +148,27 @@
 
         <section v-show="activeTab === 'kanban'">
           <div class="glass-panel filter-bar">
-            <button class="btn-chip active">全部状态</button>
-            <button class="btn-chip">P0 / P1</button>
-            <button class="btn-chip">本周截止</button>
-            <button class="btn-chip">仅阻塞</button>
+            <button class="btn-chip" :class="{ active: isAllFilterActive }" @click="resetAllFilters">全部状态</button>
+            <button class="btn-chip" :class="{ active: priorityFilter !== 'all' }" @click="togglePriorityFilter">{{ priorityFilter === 'all' ? 'P0 / P1' : priorityFilter.toUpperCase() }}</button>
+            <button class="btn-chip" :class="{ active: deadlineFilter === 'week' }" @click="toggleDeadlineFilter">本周截止</button>
+            <button class="btn-chip" :class="{ active: blockedFilter === 'blocked' }" @click="toggleBlockedFilter">仅阻塞</button>
             <div style="margin-left: auto;">
               <button class="btn-primary" @click="openModal"><span class="material-symbols-outlined">add</span>新建任务</button>
             </div>
           </div>
           <div class="kanban">
-            <div class="kanban-column glass-panel">
+            <div v-for="column in filteredKanbanData" :key="column.id" class="kanban-column glass-panel">
               <div class="kanban-column-header">
-                <h3>纳米晶体结构优化</h3>
-                <span class="pill pill-neutral">3</span>
+                <h3>{{ column.name }}</h3>
+                <span class="pill pill-neutral">{{ column.tasks.length }}</span>
               </div>
-              <div class="kanban-card" role="button" tabindex="0" style="cursor: pointer;" @click="handleNavigate('/task/1')">
-                <h4>更新联调验证脚本</h4>
+              <div v-for="task in column.tasks" :key="task.id" class="kanban-card">
+                <h4>{{ task.title }}</h4>
                 <div class="kanban-meta">
-                  <span class="micro-tag p1">P1</span>
-                  <span class="micro-tag">里程碑</span>
+                  <span :class="['micro-tag', task.priority.toLowerCase()]">{{ task.priority }}</span>
+                  <span v-if="task.tag" class="micro-tag" :style="task.isBlocked ? 'color: var(--color-danger-600); background: rgba(255,218,214,0.82);' : ''">{{ task.tag }}</span>
                 </div>
-                <p class="task-note">截止：今天 18:00 · 进度：65%</p>
-              </div>
-              <div class="kanban-card">
-                <h4>同步样本误差分析结论</h4>
-                <div class="kanban-meta">
-                  <span class="micro-tag p2">P2</span>
-                  <span class="micro-tag">PBC 绑定</span>
-                </div>
-                <p class="task-note">截止：明天 12:00 · 进度：30%</p>
-              </div>
-            </div>
-
-            <div class="kanban-column glass-panel">
-              <div class="kanban-column-header">
-                <h3>深度学习实验室自动化</h3>
-                <span class="pill pill-neutral">2</span>
-              </div>
-              <div class="kanban-card">
-                <h4>设计自动化巡检告警</h4>
-                <div class="kanban-meta">
-                  <span class="micro-tag p0">P0</span>
-                  <span class="micro-tag">阻塞风险</span>
-                </div>
-                <p class="task-note">截止：周三 · 进度：45%</p>
-              </div>
-              <div class="kanban-card">
-                <h4>补齐 SOP 文档结构</h4>
-                <div class="kanban-meta">
-                  <span class="micro-tag p3">P3</span>
-                </div>
-                <p class="task-note">截止：周五 · 进度：20%</p>
-              </div>
-            </div>
-
-            <div class="kanban-column glass-panel">
-              <div class="kanban-column-header">
-                <h3>量子纠缠通信协议 V2</h3>
-                <span class="pill pill-neutral">1</span>
-              </div>
-              <div class="kanban-card">
-                <h4>确认阻塞依赖任务说明</h4>
-                <div class="kanban-meta">
-                  <span class="micro-tag p0">P0</span>
-                  <span class="micro-tag" style="color: var(--color-danger-600); background: rgba(255,218,214,0.82);">已阻塞</span>
-                </div>
-                <p class="task-note">阻塞原因：协议接口未冻结</p>
-              </div>
-            </div>
-
-            <div class="kanban-column glass-panel">
-              <div class="kanban-column-header">
-                <h3>通用事项</h3>
-                <span class="pill pill-neutral">2</span>
-              </div>
-              <div class="kanban-card">
-                <h4>完成本周 PBC 自评</h4>
-                <div class="kanban-meta">
-                  <span class="micro-tag p1">P1</span>
-                </div>
-                <p class="task-note">截止：本周五 · 进度：55%</p>
-              </div>
-              <div class="kanban-card">
-                <h4>整理团队日报最佳实践</h4>
-                <div class="kanban-meta">
-                  <span class="micro-tag p2">P2</span>
-                </div>
-                <p class="task-note">截止：下周一 · 进度：15%</p>
+                <p class="task-note">{{ task.isBlocked ? '阻塞原因：' : '截止：' }}{{ task.deadline }}{{ task.progress && !task.isBlocked ? ' · 进度：' + task.progress : '' }}</p>
               </div>
             </div>
           </div>
@@ -704,12 +638,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { pushAppPath } from '../utils/navigation'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import UserProfileHoverCard from '../components/topbar/UserProfileHoverCard.vue'
 
 const router = useRouter()
+const route = useRoute()
+
 const currentUser = {
   name: '张工',
   role: '研发总监',
@@ -721,9 +656,119 @@ const isModalOpen = ref(false)
 const isAiDrawerOpen = ref(false)
 const toast = ref({ show: false, title: '', message: '', icon: '' })
 
-const handleNavigate = (path) => {
-  pushAppPath(router, path)
+// 优先级过滤状态: 'all' | 'p0' | 'p1'
+const priorityFilter = ref('all')
+
+// 截止日期过滤状态: 'all' | 'week'
+const deadlineFilter = ref('all')
+
+// 阻塞过滤状态: 'all' | 'blocked'
+const blockedFilter = ref('all')
+
+// 检查任务是否在本周截止
+const isThisWeekDeadline = (deadline) => {
+  const weekKeywords = ['今天', '周三', '周五', '本周', '本周五']
+  return weekKeywords.some(keyword => deadline.includes(keyword))
 }
+
+// 是否所有过滤器都处于默认状态
+const isAllFilterActive = computed(() => {
+  return priorityFilter.value === 'all' && deadlineFilter.value === 'all' && blockedFilter.value === 'all'
+})
+
+// 重置所有过滤器
+const resetAllFilters = () => {
+  priorityFilter.value = 'all'
+  deadlineFilter.value = 'all'
+  blockedFilter.value = 'all'
+}
+
+// 切换阻塞过滤
+const toggleBlockedFilter = () => {
+  blockedFilter.value = blockedFilter.value === 'all' ? 'blocked' : 'all'
+}
+
+// 看板数据
+const kanbanData = ref([
+  {
+    id: 1,
+    name: '纳米晶体结构优化',
+    tasks: [
+      { id: 1, title: '更新联调验证脚本', priority: 'P1', tag: '里程碑', deadline: '今天 18:00', progress: '65%' },
+      { id: 2, title: '同步样本误差分析结论', priority: 'P2', tag: 'PBC 绑定', deadline: '明天 12:00', progress: '30%' }
+    ]
+  },
+  {
+    id: 2,
+    name: '深度学习实验室自动化',
+    tasks: [
+      { id: 3, title: '设计自动化巡检告警', priority: 'P0', tag: '阻塞风险', deadline: '周三', progress: '45%' },
+      { id: 4, title: '补齐 SOP 文档结构', priority: 'P3', deadline: '周五', progress: '20%' }
+    ]
+  },
+  {
+    id: 3,
+    name: '量子纠缠通信协议 V2',
+    tasks: [
+      { id: 5, title: '确认阻塞依赖任务说明', priority: 'P0', tag: '已阻塞', deadline: '协议接口未冻结', isBlocked: true }
+    ]
+  },
+  {
+    id: 4,
+    name: '通用事项',
+    tasks: [
+      { id: 6, title: '完成本周 PBC 自评', priority: 'P1', deadline: '本周五', progress: '55%' },
+      { id: 7, title: '整理团队日报最佳实践', priority: 'P2', tag: '', deadline: '下周一', progress: '15%' }
+    ]
+  }
+])
+
+// 过滤后的看板数据
+const filteredKanbanData = computed(() => {
+  return kanbanData.value.map(column => ({
+    ...column,
+    tasks: column.tasks.filter(task => {
+      // 优先级过滤
+      if (priorityFilter.value !== 'all' && task.priority !== priorityFilter.value.toUpperCase()) {
+        return false
+      }
+      // 截止日期过滤
+      if (deadlineFilter.value === 'week' && !isThisWeekDeadline(task.deadline)) {
+        return false
+      }
+      // 阻塞过滤
+      if (blockedFilter.value === 'blocked' && !task.isBlocked) {
+        return false
+      }
+      return true
+    })
+  })).filter(column => column.tasks.length > 0)
+})
+
+// 切换优先级过滤
+const togglePriorityFilter = () => {
+  if (priorityFilter.value === 'all' || priorityFilter.value === 'p1') {
+    priorityFilter.value = 'p0'
+  } else {
+    priorityFilter.value = 'p1'
+  }
+}
+
+// 切换截止日期过滤
+const toggleDeadlineFilter = () => {
+  deadlineFilter.value = deadlineFilter.value === 'all' ? 'week' : 'all'
+}
+
+const handleNavigate = (path) => {
+  router.push(path)
+}
+
+onMounted(() => {
+  const tab = route.query.tab
+  if (tab && ['logs', 'kanban', 'pbc'].includes(tab)) {
+    activeTab.value = tab
+  }
+})
 
 const openModal = () => {
   isModalOpen.value = true

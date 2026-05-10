@@ -87,8 +87,8 @@
               </div>
               <div class="summary-actions">
                 <button class="btn-primary"><span class="material-symbols-outlined">arrow_forward</span>查看 AI 日报</button>
-                <button class="btn-secondary"><span class="material-symbols-outlined">task_alt</span>进入个人工作台</button>
-                <button class="btn-secondary"><span class="material-symbols-outlined">add_task</span>快速创建任务</button>
+                <button class="btn-secondary" @click="handleNavigate('/workbench')"><span class="material-symbols-outlined">task_alt</span>进入个人工作台</button>
+                <button class="btn-secondary" @click="openModal"><span class="material-symbols-outlined">add_task</span>快速创建任务</button>
               </div>
             </div>
           </div>
@@ -117,10 +117,10 @@
           <div class="glass-panel" style="padding: 24px; border-radius: 24px;">
             <div style="display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px;">
               <h2 class="section-title" style="font-size: 24px;">我的待办</h2>
-              <button class="btn-chip active">查看全部</button>
+              <button class="btn-chip active" @click="handleNavigate('/workbench?tab=kanban')">查看全部</button>
             </div>
             <div class="task-list">
-              <div class="task-row" role="button" tabindex="0" style="cursor: pointer;" @click="handleNavigate('/task/1')">
+              <div class="task-row">
                 <div class="task-icon"><span class="material-symbols-outlined">play_arrow</span></div>
                 <div style="flex: 1;">
                   <p class="task-title">完成 Q3 实验室能效评估报告</p>
@@ -638,10 +638,10 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { pushAppPath } from '../utils/navigation'
 import UserProfileHoverCard from '../components/topbar/UserProfileHoverCard.vue'
 
 const router = useRouter()
+
 const currentUser = {
   name: '张工',
   role: '研发总监',
@@ -653,7 +653,7 @@ const isAiDrawerOpen = ref(false)
 const toast = ref({ show: false, title: '', message: '', icon: '' })
 
 const handleNavigate = (path) => {
-  pushAppPath(router, path)
+  router.push(path)
 }
 
 const openModal = () => {
