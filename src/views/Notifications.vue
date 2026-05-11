@@ -37,9 +37,6 @@
 
       <header class="app-topbar">
         <div class="topbar-left">
-          <button class="topbar-back-icon" type="button" aria-label="返回工作台" @click="handleNavigate('/dashboard')">
-            <span class="material-symbols-outlined">arrow_back</span>
-          </button>
           <div>
             <h2 class="topbar-title">通知中心</h2>
             <div class="topbar-breadcrumb">
@@ -96,6 +93,11 @@
               </p>
             </div>
             <div class="page-actions">
+              <!-- TODO: 对接返回工作台路由 -->
+              <button class="btn-secondary" type="button" @click="handleNavigate('/dashboard')">
+                <span class="material-symbols-outlined">arrow_back</span>
+                返回工作台
+              </button>
               <!-- TODO: 对接通知偏好设置路由 -->
               <button class="btn-primary" type="button" @click="handleNavigate('/settings')">
                 <span class="material-symbols-outlined">tune</span>

@@ -238,7 +238,7 @@
 
   <div class="modal-shell" :class="{ open: isModalOpen }">
     <div class="modal-backdrop" @click="closeModal"></div>
-    <section class="modal-panel glass-panel-strong classic-modal-panel project-create-modal">
+    <section class="modal-panel glass-panel-strong project-create-modal">
       <div class="modal-header">
         <div>
           <span class="pill pill-ai">新建项目</span>

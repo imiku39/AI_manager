@@ -383,45 +383,19 @@ onBeforeUnmount(() => {
 
 .success-toast {
   position: fixed;
-  left: clamp(16px, 2vw, 28px);
-  bottom: max(22px, env(safe-area-inset-bottom));
-  z-index: 1200;
+  top: 20px;
+  left: 50%;
+  z-index: 10000;
   display: inline-flex;
-  align-items: flex-start;
-  gap: 12px;
-  width: min(440px, calc(100vw - 32px));
-  min-width: min(300px, calc(100vw - 32px));
-  max-width: calc(100vw - 32px);
-  padding: 16px 18px;
-  color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.84);
-  border-radius: 20px;
-  box-shadow: var(--shadow-overlay);
-  transform: none;
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  color: #fff;
+  background: #10b981;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(-50%);
   font-size: 14px;
-  font-weight: 600;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-}
-
-.success-toast .material-symbols-outlined {
-  flex: 0 0 auto;
-  color: var(--color-secondary-600);
-  font-size: 20px;
-}
-
-@media (max-width: 767px) {
-  .success-toast {
-    right: 10px;
-    left: 10px;
-    bottom: max(10px, env(safe-area-inset-bottom));
-    width: auto;
-    max-width: none;
-    min-width: 0;
-    border-radius: 18px;
-  }
+  font-weight: 500;
 }
 </style>

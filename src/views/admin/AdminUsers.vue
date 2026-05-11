@@ -192,7 +192,7 @@
 
     <div class="modal-shell" :class="{ open: modalState.createUser }" data-modal-id="create-user-modal">
       <div class="modal-backdrop" data-modal-close @click="closeModal('createUser')"></div>
-      <section class="modal-panel glass-panel-strong classic-modal-panel user-modal">
+      <section class="modal-panel glass-panel-strong user-modal">
         <div class="modal-header">
           <div>
             <span class="pill pill-success">账户创建</span>
@@ -1104,11 +1104,6 @@ onBeforeUnmount(() => {
 
 .import-table {
   margin-top: 12px;
-  min-width: 640px;
-}
-
-.import-preview-card {
-  overflow-x: auto;
 }
 
 .import-helper {
@@ -1133,5 +1128,4 @@ onBeforeUnmount(() => {
     grid-template-columns: 1fr;
   }
 }
-
 </style>

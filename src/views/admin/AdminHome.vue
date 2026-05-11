@@ -323,7 +323,7 @@
 
     <div class="modal-shell" :class="{ open: modalState.createTemplate }" data-modal-id="create-template-modal">
       <div class="modal-backdrop" data-modal-close @click="closeModal('createTemplate')"></div>
-      <section class="modal-panel glass-panel-strong classic-modal-panel role-template-modal">
+      <section class="modal-panel glass-panel-strong">
         <div class="modal-header">
           <div>
             <span class="pill pill-success">模板编辑</span>
@@ -934,21 +934,9 @@ onBeforeUnmount(() => {
 }
 
 .admin-matrix-modal {
-  width: min(960px, 100%);
-}
-
-.role-template-modal {
-  width: min(1120px, calc(100vw - 48px));
-}
-
-.admin-matrix-modal .matrix-section {
-  min-width: 0;
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
-.admin-matrix-modal .data-table {
-  min-width: 720px;
+  width: min(960px, calc(100vw - 40px));
+  max-height: min(90vh, 920px);
+  overflow-y: auto;
 }
 
 .matrix-section + .matrix-section {

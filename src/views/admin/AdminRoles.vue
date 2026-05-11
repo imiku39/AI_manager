@@ -253,7 +253,7 @@
       data-modal-id="edit-template-modal"
     >
       <div class="modal-backdrop" data-modal-close @click="closeModal('editTemplate')"></div>
-      <section class="modal-panel glass-panel-strong classic-modal-panel role-template-modal">
+      <section class="modal-panel glass-panel-strong">
         <div class="modal-header">
           <div>
             <span class="pill pill-success">模板编辑</span>
@@ -393,7 +393,7 @@
       data-modal-id="create-template-modal"
     >
       <div class="modal-backdrop" data-modal-close @click="closeModal('createTemplate')"></div>
-      <section class="modal-panel glass-panel-strong classic-modal-panel role-template-modal">
+      <section class="modal-panel glass-panel-strong">
         <div class="modal-header">
           <div>
             <span class="pill pill-success">模板编辑</span>
@@ -1078,9 +1078,5 @@ onBeforeUnmount(() => {
 
 .admin-roles-page .app-shell {
   min-height: 100vh;
-}
-
-.role-template-modal {
-  width: min(1120px, calc(100vw - 48px));
 }
 </style>

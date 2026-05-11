@@ -523,7 +523,7 @@
     </main>
 
     <!-- Edit Project Modal -->
-    <div class="modal-shell" :class="{ open: isEditModalOpen }">
+    <div class="modal-shell" v-show="isEditModalOpen">
       <div class="modal-backdrop" @click="isEditModalOpen = false"></div>
       <section class="modal-panel glass-panel-strong project-edit-modal">
         <div class="modal-header">
@@ -615,7 +615,7 @@
                 <div class="field-input"><span class="material-symbols-outlined" style="margin-top:16px;">notes</span><textarea v-model="editForm.note"></textarea></div>
               </div>
               <div class="project-edit-chip-row">
-                <button v-for="chip in editChips1" :key="chip.label" class="permission-chip" :class="{ on: chip.on }" type="button">{{ chip.label }}</button>
+                <button v-for="chip in editChips1" :key="chip" class="permission-chip" :class="{ on: chip.on }" type="button">{{ chip.label }}</button>
               </div>
             </article>
             <article class="glass-panel project-edit-card">
@@ -632,7 +632,7 @@
                 <div class="field-input"><span class="material-symbols-outlined" style="margin-top:16px;">article</span><textarea v-model="editForm.bio"></textarea></div>
               </div>
               <div class="project-edit-chip-row">
-                <button v-for="chip in editChips2" :key="chip.label" class="permission-chip" :class="{ on: chip.on }" type="button">{{ chip.label }}</button>
+                <button v-for="chip in editChips2" :key="chip" class="permission-chip" :class="{ on: chip.on }" type="button">{{ chip.label }}</button>
               </div>
             </article>
           </div>
@@ -963,10 +963,10 @@ watch(() => route.params.tab, () => { isAiDrawerOpen.value = false })
 .legend-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
 .legend-dot { display: inline-flex; align-items: center; gap: 6px; }
 .legend-dot::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: currentColor; display: inline-block; }
-.project-edit-modal { width: min(1180px, 100%); }
+.project-edit-modal { width: min(1180px, calc(100vw - 48px)); }
 .project-edit-layout { display: grid; grid-template-columns: minmax(300px, 0.92fr) minmax(0, 1.4fr); gap: 20px; }
 .project-edit-side { display: flex; flex-direction: column; gap: 18px; }
-.project-edit-card { padding: 20px; border-radius: 24px; min-width: 0; }
+.project-edit-card { padding: 20px; border-radius: 24px; }
 .project-edit-card h3, .project-edit-card p { margin: 0; }
 .project-edit-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
 .project-edit-kpi { padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,0.28); border: 1px solid rgba(255,255,255,0.58); }
@@ -979,7 +979,7 @@ watch(() => route.params.tab, () => { isAiDrawerOpen.value = false })
 .project-edit-meta-row > div span { font-size: 12px; color: var(--color-text-tertiary); }
 .project-edit-meta-row > div strong { font-size: 14px; text-align: left; }
 .project-edit-member-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-.project-edit-member { display: inline-flex; align-items: center; gap: 10px; min-height: 42px; max-width: 100%; padding: 0 14px 0 8px; border-radius: 999px; background: rgba(255,255,255,0.5); border: 1px solid rgba(216,221,232,0.88); color: var(--color-text-secondary); font-size: 13px; font-weight: 600; }
+.project-edit-member { display: inline-flex; align-items: center; gap: 10px; min-height: 42px; padding: 0 14px 0 8px; border-radius: 999px; background: rgba(255,255,255,0.5); border: 1px solid rgba(216,221,232,0.88); color: var(--color-text-secondary); font-size: 13px; font-weight: 600; }
 .project-edit-member img { width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.82); }
 .project-edit-progress { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
 .project-edit-progress .progress-track { flex: 1; }
@@ -995,7 +995,6 @@ watch(() => route.params.tab, () => { isAiDrawerOpen.value = false })
 .project-edit-chip-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 .project-edit-textarea .field-input { align-items: flex-start; min-height: 136px; }
 .project-edit-textarea textarea { min-height: 108px; }
-.project-edit-member, .project-edit-meta-row, .project-edit-note, .project-edit-kpi { overflow-wrap: anywhere; }
 .role-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 26px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .role-badge.pm { background: rgba(79,143,246,0.14); color: var(--color-primary-700); }
 .role-badge.dev { background: rgba(168,113,255,0.14); color: var(--color-tertiary-600); }
@@ -1033,10 +1032,5 @@ watch(() => route.params.tab, () => { isAiDrawerOpen.value = false })
   }
 @media (max-width: 1279px) {
   .project-edit-layout, .project-edit-field-grid { grid-template-columns: 1fr; }
-}
-@media (max-width: 767px) {
-  .project-edit-card { padding: 16px; border-radius: 20px; }
-  .project-edit-kpis { grid-template-columns: 1fr; }
-  .project-edit-meta-row { align-items: flex-start; flex-direction: column; }
 }
 </style>

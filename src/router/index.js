@@ -15,86 +15,72 @@ const routes = [
   {
     path: '/dashboard',
     name: 'Dashboard',
-    meta: { routeLoader: true },
     component: () => import('../views/Dashboard.vue')
   },
   {
     path: '/projects',
     name: 'Projects',
-    meta: { routeLoader: true },
     component: () => import('../views/Projects.vue')
   },
   {
     path: '/workbench',
     name: 'Workbench',
-    meta: { routeLoader: true },
     component: () => import('../views/Workbench.vue')
   },
   {
     path: '/reports',
     name: 'Reports',
-    meta: { routeLoader: true },
     component: () => import('../views/Reports.vue')
   },
   {
     path: '/settings',
     name: 'Settings',
-    meta: { routeLoader: true },
     component: () => import('../views/Settings.vue')
   },
   {
     path: '/notifications',
     name: 'Notifications',
-    meta: { routeLoader: true },
     component: () => import('../views/Notifications.vue')
   },
   {
     path: '/admin',
     name: 'AdminHome',
-    meta: { routeLoader: true },
     component: () => import('../views/admin/AdminHome.vue')
   },
   {
     path: '/admin/users',
     name: 'AdminUsers',
-    meta: { routeLoader: true },
     component: () => import('../views/admin/AdminUsers.vue')
   },
   {
     path: '/admin/roles',
     name: 'AdminRoles',
-    meta: { routeLoader: true },
     component: () => import('../views/admin/AdminRoles.vue')
   },
   {
     path: '/admin/project-templates',
     name: 'AdminProjectTemplates',
-    meta: { routeLoader: true },
     component: () => import('../views/admin/AdminProjectTemplates.vue')
   },
   {
     path: '/admin/logs',
     name: 'AdminLogs',
-    meta: { routeLoader: true },
     component: () => import('../views/admin/AdminLogs.vue')
   },
   {
     path: '/admin/system',
     name: 'AdminSystem',
-    meta: { routeLoader: true },
     component: () => import('../views/admin/AdminSystem.vue')
   },
   // 项目详情（自带 glassmorphism 布局）
   {
     path: '/project/:id',
     name: 'ProjectDetail',
-    meta: { routeLoader: true, routeTransition: 'page-fade-fast' },
     component: () => import('../views/ProjectDetail.vue')
   },
   {
     path: '/project/:id/:tab',
     name: 'ProjectDetailTab',
-    meta: { routeLoader: true, routeTransition: 'page-fade-fast' },
     component: () => import('../views/ProjectDetail.vue')
   },
   // 原有页面（使用 MainLayout）
